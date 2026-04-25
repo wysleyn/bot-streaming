@@ -9,8 +9,8 @@ const PORT = process.env.PORT || 3000;
 // ⚠️ COLOQUE SEU TOKEN AQUI
 const TOKEN = "a2sgqtw8lehf0q3is";
 
-// ⚠️ IMPORTANTE: precisa ser "instance171812"
-const INSTANCE_ID = "instance171812";
+// ⚠️ IMPORTANTE: SOMENTE O NÚMERO DA INSTÂNCIA
+const INSTANCE_ID = "171812";
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
@@ -22,8 +22,12 @@ app.post("/webhook", async (req, res) => {
   console.log("📩 Webhook UltraMsg recebido:");
   console.log(JSON.stringify(body, null, 2));
 
-  if (body.event_type === "message_received" && body.data.fromMe === false) {
-    const from = body.data.from;
+  if (
+    body.event_type === "message_received" &&
+    body.data &&
+    body.data.fromMe === false
+  ) {
+    const from = body.data.from.replace("@c.us", "");
     const message = body.data.body;
 
     console.log("💬 Mensagem:", message);
@@ -37,8 +41,8 @@ Escolha uma opção:
 3️⃣ Garantir acesso vitalício agora`;
 
     try {
-      await axios.post(
-        `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`,
+      const response = await axios.post(
+        `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
         new URLSearchParams({
           token: TOKEN,
           to: from,
@@ -51,7 +55,7 @@ Escolha uma opção:
         }
       );
 
-      console.log("✅ Resposta enviada com sucesso!");
+      console.log("✅ Resposta enviada:", response.data);
     } catch (error) {
       console.error(
         "❌ Erro ao enviar mensagem:",
