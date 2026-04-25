@@ -6,7 +6,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+// ✅ SEU TOKEN REAL
 const TOKEN = "a2sgqtw8lehf0q3is";
+
+// ✅ SOMENTE O NÚMERO DA INSTÂNCIA
 const INSTANCE_ID = "171812";
 
 app.get("/", (req, res) => {
@@ -37,27 +40,27 @@ Escolha uma opção:
 2️⃣ Ver conteúdos disponíveis
 3️⃣ Garantir acesso vitalício agora`;
 
- try {
-  const response = await axios.post(
-    `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat?token=${TOKEN}`,
-    new URLSearchParams({
-      to: from,
-      body: resposta
-    }).toString(),
-    {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
+    try {
+      // ✅ ENVIO VIA GET (mesmo formato que funcionou no navegador)
+      const response = await axios.get(
+        `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
+        {
+          params: {
+            token: TOKEN,
+            to: from,
+            body: resposta
+          }
+        }
+      );
+
+      console.log("✅ Status HTTP:", response.status);
+      console.log("✅ Resposta API:", response.data);
+
+    } catch (error) {
+      console.error("❌ Status erro:", error.response?.status);
+      console.error("❌ Resposta erro:", error.response?.data || error.message);
     }
-  );
-
-  console.log("✅ Status HTTP:", response.status);
-  console.log("✅ Resposta API:", response.data);
-
-} catch (error) {
-  console.error("❌ Status erro:", error.response?.status);
-  console.error("❌ Resposta erro:", error.response?.data);
-}
+  }
 
   res.send("ok");
 });
