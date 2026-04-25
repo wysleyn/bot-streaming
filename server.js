@@ -9,8 +9,7 @@ const PORT = process.env.PORT || 3000;
 const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
-const VIDEO_URL =
-  "https://drive.google.com/uc?export=download&id=1zDr38VNu_n6ROqpYzfCk0uYgvByIwETG";
+const VIDEO_URL = "https://files.catbox.moe/l24ome.mp4";
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
