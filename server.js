@@ -6,9 +6,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// ⚠️ COLOQUE SEUS DADOS AQUI
-const INSTANCE_ID = "171812"; // seu instanceId
-const TOKEN = "a2sgqtw8lehf0q3i"; // coloque seu token
+// ⚠️ COLOQUE SEU TOKEN AQUI
+const TOKEN = "SEU_TOKEN_AQUI";
+const INSTANCE_ID = "171812";
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
@@ -26,7 +26,6 @@ app.post("/webhook", async (req, res) => {
 
     console.log("💬 Mensagem:", message);
 
-    // MENU AUTOMÁTICO
     const resposta = `👋 Olá! Seja bem-vindo à *MasterPlay* 🎬🔥
 
 Escolha uma opção:
@@ -35,16 +34,28 @@ Escolha uma opção:
 2️⃣ Ver conteúdos disponíveis
 3️⃣ Garantir acesso vitalício agora`;
 
-   await axios.post(
-  `https://api.ultramsg.com/171812/messages/chat`,
-  new URLSearchParams({
-    token: TOKEN,
-    to: from,
-    body: resposta
-  }).toString(),
-  {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+    try {
+      await axios.post(
+        `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`,
+        new URLSearchParams({
+          token: TOKEN,
+          to: from,
+          body: resposta
+        }).toString(),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        }
+      );
+    } catch (error) {
+      console.error("❌ Erro ao enviar mensagem:", error.response?.data || error.message);
     }
   }
-);
+
+  res.send("ok");
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
