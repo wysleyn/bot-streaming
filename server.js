@@ -7,7 +7,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // ⚠️ COLOQUE SEU TOKEN AQUI
-const TOKEN = "SEU_TOKEN_AQUI";
+const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
 app.get("/", (req, res) => {
