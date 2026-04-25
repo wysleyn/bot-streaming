@@ -40,29 +40,27 @@ Escolha uma opção:
 2️⃣ Ver conteúdos disponíveis
 3️⃣ Garantir acesso vitalício agora`;
 
-    try {
-      const response = await axios.post(
-        `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
-        new URLSearchParams({
-          token: TOKEN,
-          to: from,
-          body: resposta
-        }).toString(),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        }
-      );
-
-      console.log("✅ Resposta enviada:", response.data);
-    } catch (error) {
-      console.error(
-        "❌ Erro ao enviar mensagem:",
-        error.response?.data || error.message
-      );
+   try {
+  const response = await axios.post(
+    `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat?token=${TOKEN}`,
+    new URLSearchParams({
+      to: from,
+      body: resposta
+    }).toString(),
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
     }
-  }
+  );
+
+  console.log("✅ Resposta enviada:", response.data);
+} catch (error) {
+  console.error(
+    "❌ Erro ao enviar mensagem:",
+    error.response?.data || error.message
+  );
+}
 
   res.send("ok");
 });
