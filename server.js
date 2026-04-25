@@ -7,7 +7,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // ✅ SEU TOKEN REAL
-const TOKEN = "a2sgqtw8lehf0q3is";
+const TOKEN = "a2sgqtw8lehf0q3i";
 
 // ✅ SOMENTE O NÚMERO DA INSTÂNCIA
 const INSTANCE_ID = "171812";
