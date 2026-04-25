@@ -7,8 +7,10 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // ⚠️ COLOQUE SEU TOKEN AQUI
-const TOKEN = "a2sgqtw8lehf0q3i";
-const INSTANCE_ID = "171812";
+const TOKEN = "a2sgqtw8lehf0q3is";
+
+// ⚠️ IMPORTANTE: precisa ser "instance171812"
+const INSTANCE_ID = "instance171812";
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
@@ -48,8 +50,13 @@ Escolha uma opção:
           }
         }
       );
+
+      console.log("✅ Resposta enviada com sucesso!");
     } catch (error) {
-      console.error("❌ Erro ao enviar mensagem:", error.response?.data || error.message);
+      console.error(
+        "❌ Erro ao enviar mensagem:",
+        error.response?.data || error.message
+      );
     }
   }
 
