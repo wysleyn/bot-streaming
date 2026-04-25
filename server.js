@@ -35,19 +35,16 @@ Escolha uma opção:
 2️⃣ Ver conteúdos disponíveis
 3️⃣ Garantir acesso vitalício agora`;
 
-    await axios.post(
-      `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`,
-      {
-        token: TOKEN,
-        to: from,
-        body: resposta
-      }
-    );
+   await axios.post(
+  `https://api.ultramsg.com/171812/messages/chat`,
+  new URLSearchParams({
+    token: TOKEN,
+    to: from,
+    body: resposta
+  }).toString(),
+  {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
   }
-
-  res.send("ok");
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+);
