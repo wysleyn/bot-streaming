@@ -6,11 +6,11 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// ✅ TOKEN CORRETO DA INSTÂNCIA
 const TOKEN = "a2sgqtw8lehf0q3i";
-
-// ✅ SOMENTE O NÚMERO DA INSTÂNCIA
 const INSTANCE_ID = "171812";
+
+const VIDEO_URL =
+  "https://drive.google.com/uc?export=download&id=1zDr38VNu_n6ROqpYzfCk0uYgvByIwETG";
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
@@ -18,9 +18,6 @@ app.get("/", (req, res) => {
 
 app.post("/webhook", async (req, res) => {
   const body = req.body;
-
-  console.log("📩 Webhook UltraMsg recebido:");
-  console.log(JSON.stringify(body, null, 2));
 
   if (
     body.event_type === "message_received" &&
@@ -32,98 +29,145 @@ app.post("/webhook", async (req, res) => {
 
     let resposta = "";
 
-    // ✅ MENU INICIAL
+    // ✅ MENSAGEM INICIAL (EXATAMENTE COMO VOCÊ DEFINIU)
     if (message === "oi" || message === "menu") {
       resposta = `👋 Seja bem-vindo(a) à *MasterPlay* 🎬🔥
 
-Hoje, para ter acesso completo aos principais conteúdos, você precisaria assinar várias plataformas como Netflix, Prime Video, Disney+, HBO, Globoplay, Crunchyroll, Rakuten Viki, Apple TV+, Paramount+ e Star+.
+Hoje, para ter acesso completo aos principais conteúdos, você precisaria assinar várias plataformas como:
 
-💰 Somando tudo isso, você gastaria facilmente mais de R$ 200 por mês 😳
+📺 Netflix – R$ 39,90/mês  
+🎬 Prime Video – R$ 19,90/mês  
+🦁 Disney+ – R$ 33,90/mês  
+🎥 HBO – R$ 34,90/mês  
+📡 Globoplay – R$ 27,90/mês  
+🎌 Crunchyroll – R$ 14,99/mês  
+🌎 Rakuten Viki – R$ 25,99/mês  
+🍎 Apple TV+ – R$ 21,90/mês  
+🎞 Paramount+ – R$ 19,90/mês  
+⭐ Star+ – R$ 40,90/mês  
 
-Com a *MasterPlay* você paga apenas UMA única vez e tem acesso completo direto no seu celular.
+💸 Somando tudo isso, você poderia gastar facilmente mais de *R$ 200 todos os meses*.
+
+Com a *MasterPlay* você paga apenas *UMA única vez* e tem acesso direto no seu celular.
 
 ✅ Pagamento único  
 ✅ Sem mensalidade  
 ✅ Acesso vitalício  
 ✅ Conteúdos organizados e atualizados  
 
-Escolha uma opção abaixo:
+━━━━━━━━━━━━━━━
+
+Escolha uma opção:
 
 1️⃣ Como funciona  
-2️⃣ Ver conteúdos disponíveis  
-3️⃣ Garantir acesso vitalício agora`;
+2️⃣ Ver conteúdos  
+3️⃣ Garantir acesso agora  
+4️⃣ Falar com suporte`;
     }
 
-    // ✅ OPÇÃO 1
-    else if (message === "1") {
-      resposta = `📱 *Como funciona a MasterPlay?*
-
-1️⃣ Você realiza o pagamento único  
-2️⃣ Recebe o aplicativo imediatamente  
-3️⃣ Instala no seu celular Android  
-4️⃣ Pronto ✅ Acesso liberado para sempre
-
-Sem mensalidade.
-Sem renovação automática.
-Sem cobranças futuras.
-
-Digite *menu* para voltar.`;
-    }
-
-    // ✅ OPÇÃO 2
+    // ✅ OPÇÃO 2 – ENVIA VÍDEO + TEXTO (NA ORDEM QUE VOCÊ PEDIU)
     else if (message === "2") {
-      resposta = `🎬 *Tudo o que você encontra na MasterPlay:*
+
+      // 1️⃣ Enviar vídeo com legenda curta
+      await axios.get(
+        `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
+        {
+          params: {
+            token: TOKEN,
+            to: from,
+            video: VIDEO_URL,
+            caption:
+              "🎬 Esse é o aplicativo funcionando na prática.\n\nTudo organizado, rápido e fácil de usar 📱✨"
+          }
+        }
+      );
+
+      // 2️⃣ Enviar texto complementar
+      resposta = `🎬 *Tudo o que você encontra dentro da MasterPlay:*
+
+Imagine abrir um único aplicativo e ter acesso a:
 
 🍿 Filmes para assistir hoje mesmo  
-📺 Séries completas para maratonar  
+📺 Séries completas para maratonar sem parar  
 🎌 Animes atualizados  
 🌎 Doramas e conteúdos internacionais  
 📡 Novelas e programas populares  
 🔥 Categorias organizadas e fáceis de navegar  
 
-Tudo em um único aplicativo 📱✨
+Sem precisar trocar de aplicativo.
+Sem pagar várias assinaturas.
+Sem limite de acesso.
 
-Digite *menu* para voltar  
-ou escolha:
+É como ter várias plataformas reunidas em um só lugar, direto no seu celular 📱✨
 
-3️⃣ Garantir acesso vitalício agora`;
+━━━━━━━━━━━━━━━
+
+Escolha a próxima opção:
+
+1️⃣ Como funciona  
+3️⃣ Garantir acesso agora  
+4️⃣ Falar com suporte`;
     }
 
-    // ✅ OPÇÃO 3 (VENDA)
+    // ✅ OPÇÃO 1
+    else if (message === "1") {
+      resposta = `📱 *Como funciona?*
+
+1️⃣ Você realiza o pagamento único  
+2️⃣ Recebe o aplicativo imediatamente  
+3️⃣ Instala no seu celular  
+4️⃣ Acesso liberado ✅
+
+━━━━━━━━━━━━━━━
+
+Escolha:
+
+2️⃣ Ver conteúdos  
+3️⃣ Garantir acesso  
+4️⃣ Falar com suporte`;
+    }
+
+    // ✅ OPÇÃO 3 (COM SUPORTE)
     else if (message === "3") {
       resposta = `🔥 *Acesso Vitalício MasterPlay*
 
-Hoje você pode garantir acesso completo pagando apenas:
+Valor único:
 
-💰 R$ 49,90 (pagamento único)
+💰 R$ 49,90
 
-Enquanto muitos pagam mais de R$ 200 todos os meses em assinaturas separadas…
-
-Você resolve tudo com um único pagamento.
+Você paga uma vez e usa para sempre.
 
 ✅ Sem mensalidade  
-✅ Sem renovação automática  
-✅ Sem taxas escondidas  
-✅ Acesso imediato após pagamento  
+✅ Liberação rápida após pagamento  
+✅ Acesso imediato  
 
-Clique abaixo para garantir agora:
+━━━━━━━━━━━━━━━
 
 👉 https://mpago.la/319JmBC
 
-Assim que o pagamento for confirmado, seu acesso é liberado ✅
+━━━━━━━━━━━━━━━
 
-Digite *menu* para voltar.`;
+Escolha:
+
+1️⃣ Como funciona  
+2️⃣ Ver conteúdos  
+4️⃣ Falar com suporte`;
+    }
+
+    // ✅ SUPORTE
+    else if (message === "4") {
+      resposta = `👨‍💻 Você escolheu falar com o suporte.
+
+Envie sua dúvida que iremos responder o mais rápido possível ✅`;
     }
 
     // ✅ QUALQUER OUTRA MENSAGEM
     else {
-      resposta = `❓ Não entendi sua mensagem.
-
-Digite *menu* para ver as opções disponíveis.`;
+      resposta = `Digite *menu* para ver as opções disponíveis.`;
     }
 
-    try {
-      const response = await axios.get(
+    if (resposta) {
+      await axios.get(
         `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
         {
           params: {
@@ -132,14 +176,6 @@ Digite *menu* para ver as opções disponíveis.`;
             body: resposta
           }
         }
-      );
-
-      console.log("✅ Resposta enviada:", response.data);
-
-    } catch (error) {
-      console.error(
-        "❌ Erro ao enviar mensagem:",
-        error.response?.data || error.message
       );
     }
   }
