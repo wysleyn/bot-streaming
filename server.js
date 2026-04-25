@@ -64,24 +64,34 @@ Escolha uma opção:
 4️⃣ Falar com suporte`;
     }
 
-    // ✅ OPÇÃO 2 – ENVIA VÍDEO + TEXTO (NA ORDEM QUE VOCÊ PEDIU)
+    // ✅ OPÇÃO 2 – ENVIA VÍDEO + TEXTO
     else if (message === "2") {
 
-      // 1️⃣ Enviar vídeo com legenda curta
-      await axios.get(
-        `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
-        {
-          params: {
+      try {
+        // ✅ Enviar vídeo via POST
+        await axios.post(
+          `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
+          new URLSearchParams({
             token: TOKEN,
             to: from,
             video: VIDEO_URL,
             caption:
               "🎬 Esse é o aplicativo funcionando na prática.\n\nTudo organizado, rápido e fácil de usar 📱✨"
+          }).toString(),
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            }
           }
-        }
-      );
+        );
 
-      // 2️⃣ Enviar texto complementar
+        console.log("✅ Vídeo enviado com sucesso");
+
+      } catch (error) {
+        console.error("❌ Erro ao enviar vídeo:", error.response?.data || error.message);
+      }
+
+      // ✅ Texto complementar
       resposta = `🎬 *Tudo o que você encontra dentro da MasterPlay:*
 
 Imagine abrir um único aplicativo e ter acesso a:
@@ -126,7 +136,7 @@ Escolha:
 4️⃣ Falar com suporte`;
     }
 
-    // ✅ OPÇÃO 3 (COM SUPORTE)
+    // ✅ OPÇÃO 3
     else if (message === "3") {
       resposta = `🔥 *Acesso Vitalício MasterPlay*
 
@@ -160,7 +170,7 @@ Escolha:
 Envie sua dúvida que iremos responder o mais rápido possível ✅`;
     }
 
-    // ✅ QUALQUER OUTRA MENSAGEM
+    // ✅ PADRÃO
     else {
       resposta = `Digite *menu* para ver as opções disponíveis.`;
     }
