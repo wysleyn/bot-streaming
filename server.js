@@ -5,19 +5,21 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Rota principal
 app.get("/", (req, res) => {
-  res.send("✅ Bot Streaming Online!");
+  res.send("✅ MasterPlay Bot Online!");
 });
 
-// Rota para receber mensagens (Webhook)
-app.post("/webhook", (req, res) => {
+app.post("/webhook", async (req, res) => {
   const body = req.body;
 
-  console.log("Mensagem recebida:");
-  console.log(body);
+  console.log("📩 Webhook UltraMsg recebido:");
+  console.log(JSON.stringify(body, null, 2));
 
-  res.status(200).send("Mensagem recebida com sucesso!");
+  if (body.data && body.data.body) {
+    console.log("💬 Mensagem:", body.data.body);
+  }
+
+  res.send("ok");
 });
 
 app.listen(PORT, () => {
