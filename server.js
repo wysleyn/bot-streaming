@@ -6,14 +6,23 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+// 🔹 ULTRAMSG
 const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
-const VIDEO_URL = "https://files.catbox.moe/hdreo7.mp4";
+// 🔹 MERCADO PAGO (COLOQUE SEU ACCESS TOKEN AQUI)
+const MP_ACCESS_TOKEN = "APP_USR-5609769983488912-042516-3165c6daed22052c70f69e4d1c915ec2-3308801985";
+
+// 🔹 APK
+const APK_LINK = "https://files.catbox.moe/vm1bsw";
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
 });
+
+/* ============================
+   WEBHOOK WHATSAPP
+============================ */
 
 app.post("/webhook", async (req, res) => {
   const body = req.body;
@@ -28,35 +37,14 @@ app.post("/webhook", async (req, res) => {
 
     let resposta = "";
 
-    // ✅ MENSAGEM INICIAL (EXATAMENTE COMO VOCÊ DEFINIU)
     if (message === "oi" || message === "menu") {
       resposta = `👋 Seja bem-vindo(a) à *MasterPlay* 🎬🔥
 
-Hoje, para ter acesso completo aos principais conteúdos, você precisaria assinar várias plataformas como:
+Para ter acesso completo aos principais conteúdos, você precisaria assinar várias plataformas separadas.
 
-📺 Netflix – R$ 39,90/mês  
-🎬 Prime Video – R$ 19,90/mês  
-🦁 Disney+ – R$ 33,90/mês  
-🎥 HBO – R$ 34,90/mês  
-📡 Globoplay – R$ 27,90/mês  
-🎌 Crunchyroll – R$ 14,99/mês  
-🌎 Rakuten Viki – R$ 25,99/mês  
-🍎 Apple TV+ – R$ 21,90/mês  
-🎞 Paramount+ – R$ 19,90/mês  
-⭐ Star+ – R$ 40,90/mês  
-
-💸 Somando tudo isso, você poderia gastar facilmente mais de *R$ 200 todos os meses*.
-
-Com a *MasterPlay* você paga apenas *UMA única vez* e tem acesso direto no seu celular.
-
-✅ Pagamento único  
-✅ Sem mensalidade  
-✅ Acesso vitalício  
-✅ Conteúdos organizados e atualizados  
+Com a *MasterPlay* você paga apenas UMA única vez.
 
 ━━━━━━━━━━━━━━━
-
-Escolha uma opção:
 
 1️⃣ Como funciona  
 2️⃣ Ver conteúdos  
@@ -64,132 +52,95 @@ Escolha uma opção:
 4️⃣ Falar com suporte`;
     }
 
-    // ✅ OPÇÃO 2 – ENVIA VÍDEO + TEXTO
-    else if (message === "2") {
-
-      try {
-        // ✅ Enviar vídeo via POST
-        await axios.post(
-          `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
-          new URLSearchParams({
-            token: TOKEN,
-            to: from,
-            video: VIDEO_URL,
-            caption:
-              "🎬 Esse é o aplicativo funcionando na prática.\n\nTudo organizado, rápido e fácil de usar 📱✨"
-          }).toString(),
-          {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-          }
-        );
-
-        console.log("✅ Vídeo enviado com sucesso");
-
-      } catch (error) {
-        console.error("❌ Erro ao enviar vídeo:", error.response?.data || error.message);
-      }
-
-      // ✅ Texto complementar
-      resposta = `🎬 *Tudo o que você encontra dentro da MasterPlay:*
-
-Imagine abrir um único aplicativo e ter acesso a:
-
-🍿 Filmes para assistir hoje mesmo  
-📺 Séries completas para maratonar sem parar  
-🎌 Animes atualizados  
-🌎 Doramas e conteúdos internacionais  
-📡 Novelas e programas populares  
-🔥 Categorias organizadas e fáceis de navegar  
-
-Sem precisar trocar de aplicativo.
-Sem pagar várias assinaturas.
-Sem limite de acesso.
-
-É como ter várias plataformas reunidas em um só lugar, direto no seu celular 📱✨
-
-━━━━━━━━━━━━━━━
-
-Escolha a próxima opção:
-
-1️⃣ Como funciona  
-3️⃣ Garantir acesso agora  
-4️⃣ Falar com suporte`;
-    }
-
-    // ✅ OPÇÃO 1
-    else if (message === "1") {
-      resposta = `📱 *Como funciona?*
-
-1️⃣ Você realiza o pagamento único  
-2️⃣ Recebe o aplicativo imediatamente  
-3️⃣ Instala no seu celular  
-4️⃣ Acesso liberado ✅
-
-━━━━━━━━━━━━━━━
-
-Escolha:
-
-2️⃣ Ver conteúdos  
-3️⃣ Garantir acesso  
-4️⃣ Falar com suporte`;
-    }
-
-    // ✅ OPÇÃO 3
     else if (message === "3") {
       resposta = `🔥 *Acesso Vitalício MasterPlay*
 
-Valor único:
+💰 R$ 1,00 (valor de teste)
 
-💰 R$ 49,90
+👉 https://mpago.la/2scYgvr
 
-Você paga uma vez e usa para sempre.
-
-✅ Sem mensalidade  
-✅ Liberação rápida após pagamento  
-✅ Acesso imediato  
-
-━━━━━━━━━━━━━━━
-
-👉 https://mpago.la/319JmBC
-
-━━━━━━━━━━━━━━━
-
-Escolha:
-
-1️⃣ Como funciona  
-2️⃣ Ver conteúdos  
-4️⃣ Falar com suporte`;
+Após o pagamento, seu acesso será liberado automaticamente ✅`;
     }
 
-    // ✅ SUPORTE
-    else if (message === "4") {
-      resposta = `👨‍💻 Você escolheu falar com o suporte.
-
-Envie sua dúvida que iremos responder o mais rápido possível ✅`;
-    }
-
-    // ✅ PADRÃO
     else {
       resposta = `Digite *menu* para ver as opções disponíveis.`;
     }
 
-    if (resposta) {
+    await axios.get(
+      `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
+      {
+        params: {
+          token: TOKEN,
+          to: from,
+          body: resposta
+        }
+      }
+    );
+  }
+
+  res.send("ok");
+});
+
+/* ============================
+   WEBHOOK MERCADO PAGO
+============================ */
+
+app.post("/mercadopago", async (req, res) => {
+  try {
+    const paymentId = req.body.data?.id;
+
+    if (!paymentId) return res.sendStatus(200);
+
+    // 🔎 Consultar pagamento
+    const payment = await axios.get(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${MP_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    if (payment.data.status === "approved") {
+
+      const phone = payment.data.payer?.phone?.number;
+      const areaCode = payment.data.payer?.phone?.area_code;
+
+      if (!phone || !areaCode) {
+        console.log("Telefone não encontrado no pagamento.");
+        return res.sendStatus(200);
+      }
+
+      const fullPhone = `55${areaCode}${phone}`;
+
       await axios.get(
         `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
         {
           params: {
             token: TOKEN,
-            to: from,
-            body: resposta
+            to: fullPhone,
+            body: `✅ Pagamento confirmado!
+
+Seu acesso à *MasterPlay* está liberado 🎬🔥
+
+📥 Baixe o aplicativo aqui:
+${APK_LINK}
+
+Após instalar, abra o app e aproveite ✅
+
+Se precisar de ajuda, é só responder aqui.`
           }
         }
       );
+
+      console.log("✅ APK enviado automaticamente");
     }
+
+  } catch (error) {
+    console.error("Erro Mercado Pago:", error.response?.data || error.message);
   }
 
-  res.send("ok");
+  res.sendStatus(200);
 });
 
 app.listen(PORT, () => {
