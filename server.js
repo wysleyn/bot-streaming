@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 3000;
 const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
-// MERCADO PAGO
-const MP_ACCESS_TOKEN = "APP_USR-5609769983488912-042516-3165c6daed22052c70f69e4d1c915ec2-3308801985";
+// MERCADO PAGO PRODUÇÃO
+const MP_ACCESS_TOKEN = "APP_USR-6837348167992487-042516-9a8c1623514fc61737d98fc71f832f25-256715443";
 
 // APK
 const APK_LINK = "https://files.catbox.moe/vm1bsw";
@@ -40,16 +40,57 @@ app.post("/webhook", async (req, res) => {
 
       let resposta = "";
 
-      if (message === "3") {
-        resposta = `🔥 *Acesso Vitalício MasterPlay*
+      // MENU SIMPLES
+      if (message === "oi" || message === "menu") {
+        resposta = `👋 Bem-vindo(a) à *MasterPlay* 🎬🔥
 
-💰 R$ 1,00 (teste)
+1️⃣ Como funciona  
+2️⃣ Ver conteúdos  
+3️⃣ Garantir acesso agora`;
+      }
 
-👉 https://mpago.la/2scYgvr
+      // OPÇÃO 3 → CRIAR PAGAMENTO DINÂMICO
+      else if (message === "3") {
+
+        // ✅ Criar preferência Mercado Pago
+        const preference = await axios.post(
+          "https://api.mercadopago.com/checkout/preferences",
+          {
+            items: [
+              {
+                title: "Teste MasterPlay",
+                quantity: 1,
+                unit_price: 1.00
+              }
+            ],
+            metadata: {
+              phone: from
+            },
+            notification_url:
+              "https://bot-streaming-41zm.onrender.com/mercadopago"
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${MP_ACCESS_TOKEN}`
+            }
+          }
+        );
+
+        const paymentLink = preference.data.init_point;
+
+        resposta = `🔥 *Pagamento Teste MasterPlay*
+
+💰 R$ 1,00
+
+Clique abaixo para pagar:
+
+👉 ${paymentLink}
 
 Após o pagamento, seu acesso será liberado automaticamente ✅`;
-      } else {
-        resposta = "Digite 3 para testar o pagamento automático.";
+      }
+
+      else {
+        resposta = "Digite *menu* para ver as opções.";
       }
 
       await axios.get(
@@ -67,7 +108,7 @@ Após o pagamento, seu acesso será liberado automaticamente ✅`;
     res.sendStatus(200);
 
   } catch (error) {
-    console.error("Erro webhook WhatsApp:", error.response?.data || error.message);
+    console.error("Erro WhatsApp:", error.response?.data || error.message);
     res.sendStatus(200);
   }
 });
@@ -77,14 +118,10 @@ Após o pagamento, seu acesso será liberado automaticamente ✅`;
 // =============================
 app.post("/mercadopago", async (req, res) => {
   try {
+
     const paymentId = req.body.id;
 
-    if (!paymentId) {
-      console.log("⚠️ ID de pagamento não encontrado");
-      return res.sendStatus(200);
-    }
-
-    console.log("🔎 Consultando pagamento:", paymentId);
+    if (!paymentId) return res.sendStatus(200);
 
     const payment = await axios.get(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
@@ -95,26 +132,18 @@ app.post("/mercadopago", async (req, res) => {
       }
     );
 
-    console.log("✅ Status pagamento:", payment.data.status);
-
     if (payment.data.status === "approved") {
 
-      const phone = payment.data.payer?.phone?.number;
-      const areaCode = payment.data.payer?.phone?.area_code;
+      const phone = payment.data.metadata.phone;
 
-      if (!phone || !areaCode) {
-        console.log("⚠️ Telefone não encontrado no pagamento.");
-        return res.sendStatus(200);
-      }
-
-      const fullPhone = `55${areaCode}${phone}`;
+      if (!phone) return res.sendStatus(200);
 
       await axios.get(
         `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
         {
           params: {
             token: TOKEN,
-            to: fullPhone,
+            to: phone,
             body: `✅ Pagamento confirmado!
 
 Seu acesso à *MasterPlay* está liberado 🎬🔥
@@ -122,12 +151,12 @@ Seu acesso à *MasterPlay* está liberado 🎬🔥
 📥 Baixe o aplicativo aqui:
 ${APK_LINK}
 
-Após instalar, abra o app e aproveite ✅`
+Aproveite ✅`
           }
         }
       );
 
-      console.log("✅ APK enviado automaticamente");
+      console.log("✅ APK liberado automaticamente");
     }
 
     res.sendStatus(200);
