@@ -6,11 +6,15 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+// =============================
+// CONFIGURAÇÕES
+// =============================
+
 // ULTRAMSG
 const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
-// MERCADO PAGO PRODUÇÃO
+// MERCADO PAGO (PRODUÇÃO)
 const MP_ACCESS_TOKEN = "APP_USR-6837348167992487-042516-9a8c1623514fc61737d98fc71f832f25-256715443";
 
 // APK
@@ -40,7 +44,7 @@ app.post("/webhook", async (req, res) => {
 
       let resposta = "";
 
-      // MENU SIMPLES
+      // MENU
       if (message === "oi" || message === "menu") {
         resposta = `👋 Bem-vindo(a) à *MasterPlay* 🎬🔥
 
@@ -52,7 +56,8 @@ app.post("/webhook", async (req, res) => {
       // OPÇÃO 3 → CRIAR PAGAMENTO DINÂMICO
       else if (message === "3") {
 
-        // ✅ Criar preferência Mercado Pago
+        console.log("🛒 Criando pagamento para:", from);
+
         const preference = await axios.post(
           "https://api.mercadopago.com/checkout/preferences",
           {
@@ -108,7 +113,7 @@ Após o pagamento, seu acesso será liberado automaticamente ✅`;
     res.sendStatus(200);
 
   } catch (error) {
-    console.error("Erro WhatsApp:", error.response?.data || error.message);
+    console.error("❌ Erro WhatsApp:", error.response?.data || error.message);
     res.sendStatus(200);
   }
 });
@@ -119,9 +124,20 @@ Após o pagamento, seu acesso será liberado automaticamente ✅`;
 app.post("/mercadopago", async (req, res) => {
   try {
 
-    const paymentId = req.body.id;
+    console.log("📥 Notificação Mercado Pago:", req.body);
 
-    if (!paymentId) return res.sendStatus(200);
+    if (req.body.type !== "payment") {
+      return res.sendStatus(200);
+    }
+
+    const paymentId = req.body.data?.id;
+
+    if (!paymentId) {
+      console.log("⚠️ ID de pagamento não encontrado");
+      return res.sendStatus(200);
+    }
+
+    console.log("🔎 Consultando pagamento:", paymentId);
 
     const payment = await axios.get(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
@@ -132,11 +148,18 @@ app.post("/mercadopago", async (req, res) => {
       }
     );
 
+    console.log("✅ Status pagamento:", payment.data.status);
+
     if (payment.data.status === "approved") {
 
-      const phone = payment.data.metadata.phone;
+      const phone = payment.data.metadata?.phone;
 
-      if (!phone) return res.sendStatus(200);
+      if (!phone) {
+        console.log("⚠️ Telefone não encontrado na metadata");
+        return res.sendStatus(200);
+      }
+
+      console.log("📲 Liberando APK para:", phone);
 
       await axios.get(
         `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
@@ -162,7 +185,7 @@ Aproveite ✅`
     res.sendStatus(200);
 
   } catch (error) {
-    console.error("Erro Mercado Pago:", error.response?.data || error.message);
+    console.error("❌ Erro Mercado Pago:", error.response?.data || error.message);
     res.sendStatus(200);
   }
 });
