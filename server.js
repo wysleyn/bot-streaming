@@ -6,9 +6,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// =============================
-// CONFIGURAÇÕES
-// =============================
+// ================= CONFIGURAÇÕES =================
 
 // ULTRAMSG
 const TOKEN = "a2sgqtw8lehf0q3i";
@@ -20,12 +18,13 @@ const MP_ACCESS_TOKEN = "APP_USR-6837348167992487-042516-9a8c1623514fc61737d98fc
 // APK
 const APK_LINK = "https://files.catbox.moe/vm1bsw";
 
+// VÍDEO DEMONSTRATIVO
+const VIDEO_URL = "https://files.catbox.moe/hdreo7.mp4";
+
 // SEU NÚMERO PARA SUPORTE
 const SEU_NUMERO = "55999096129";
 
-// =============================
-// MENSAGENS FIXAS
-// =============================
+// ================= MENSAGENS =================
 
 const mensagemInicial = `👋 Seja bem-vindo(a) à *MasterPlay* 🎬🔥
 
@@ -42,13 +41,16 @@ Hoje, para ter acesso completo aos principais conteúdos, você precisaria assin
 🎞 Paramount+ – R$ 19,90/mês  
 ⭐ Star+ – R$ 40,90/mês  
 
-💸 Isso pode ultrapassar R$ 200 por mês.
+💸 Somando tudo isso, você poderia gastar facilmente mais de *R$ 200 todos os meses*.
 
 Com a *MasterPlay* você paga apenas *UMA única vez*.
 
-━━━━━━━━━━━━━━━
+✅ Pagamento único  
+✅ Sem mensalidade  
+✅ Acesso vitalício  
+✅ Conteúdos organizados e atualizados  
 
-Escolha uma opção:
+━━━━━━━━━━━━━━━
 
 1️⃣ Como funciona  
 2️⃣ Ver conteúdos  
@@ -65,9 +67,32 @@ const mensagemComoFunciona = `📱 *Como funciona?*
 
 ━━━━━━━━━━━━━━━
 
-Escolha:
-
+1️⃣ Como funciona  
 2️⃣ Ver conteúdos  
+3️⃣ Garantir acesso agora  
+4️⃣ Falar com suporte  
+5️⃣ Perguntas frequentes`;
+
+const mensagemConteudoTexto = `🎬 *Tudo o que você encontra dentro da MasterPlay:*
+
+Imagine abrir um único aplicativo e ter acesso a:
+
+🍿 Filmes para assistir hoje mesmo  
+📺 Séries completas para maratonar sem parar  
+🎌 Animes atualizados  
+🌎 Doramas e conteúdos internacionais  
+📡 Novelas e programas populares  
+🔥 Categorias organizadas e fáceis de navegar  
+
+Sem precisar trocar de aplicativo.
+Sem pagar várias assinaturas.
+Sem limite de acesso.
+
+É como ter várias plataformas reunidas em um só lugar, direto no seu celular 📱✨
+
+━━━━━━━━━━━━━━━
+
+1️⃣ Como funciona  
 3️⃣ Garantir acesso agora  
 4️⃣ Falar com suporte  
 5️⃣ Perguntas frequentes`;
@@ -95,30 +120,31 @@ Sim. O pagamento é processado pelo Mercado Pago 🔒
 🔹 O conteúdo é atualizado?
 Sim. Novos conteúdos são adicionados frequentemente.
 
+🔹 Tem canais ao vivo?
+Não. A MasterPlay não possui canais ao vivo.
+O foco é conteúdo sob demanda.
+
 🔹 Funciona na televisão?
-O app não instala direto na TV.
-Mas você pode espelhar o conteúdo do celular para a televisão 📺✨
+O aplicativo não é instalado diretamente na TV.
+Mas você pode espelhar o conteúdo para a televisão 📺✨
+
+🔹 Se eu trocar de celular, perco acesso?
+Não. Você pode instalar novamente no novo aparelho.
 
 ━━━━━━━━━━━━━━━
-
-Escolha:
 
 1️⃣ Como funciona  
 2️⃣ Ver conteúdos  
 3️⃣ Garantir acesso agora  
 4️⃣ Falar com suporte`;
 
-// =============================
-// STATUS
-// =============================
+// ================= STATUS =================
 
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
 });
 
-// =============================
-// WEBHOOK WHATSAPP
-// =============================
+// ================= WEBHOOK WHATSAPP =================
 
 app.post("/webhook", async (req, res) => {
   try {
@@ -134,22 +160,18 @@ app.post("/webhook", async (req, res) => {
 
       let resposta = "";
 
-      // MENU / GATILHO AUTOMÁTICO
+      // MENU E GATILHOS
       if (
         message === "oi" ||
         message === "menu" ||
         message.includes("quero conhecer") ||
-        message.includes("quero saber") ||
-        message.includes("mais informações")
+        message.includes("quero saber")
       ) {
         resposta = mensagemInicial;
       }
 
       // COMO FUNCIONA
-      else if (
-        message === "1" ||
-        message.includes("como funciona")
-      ) {
+      else if (message === "1" || message.includes("como funciona")) {
         resposta = mensagemComoFunciona;
       }
 
@@ -157,66 +179,35 @@ app.post("/webhook", async (req, res) => {
       else if (
         message === "2" ||
         message.includes("conteúdo") ||
-        message.includes("filmes") ||
-        message.includes("séries") ||
-        message.includes("animes") ||
-        message.includes("doramas") ||
-        message.includes("novelas")
+        message.includes("filmes")
       ) {
 
-        // Enviar vídeo
         await axios.post(
           `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
           new URLSearchParams({
             token: TOKEN,
             to: from,
-            video: "https://files.catbox.moe/hdreo7.mp4",
+            video: VIDEO_URL,
             caption:
               "🎬 Esse é o aplicativo funcionando na prática.\n\nTudo organizado, rápido e fácil de usar 📱✨"
           }).toString(),
-          {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
-          }
+          { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
         );
 
-        resposta = `🎬 *Tudo o que você encontra dentro da MasterPlay:*
-
-🍿 Filmes  
-📺 Séries  
-🎌 Animes  
-🌎 Doramas  
-📡 Novelas  
-
-━━━━━━━━━━━━━━━
-
-Escolha:
-
-1️⃣ Como funciona  
-3️⃣ Garantir acesso agora  
-4️⃣ Falar com suporte  
-5️⃣ Perguntas frequentes`;
+        resposta = mensagemConteudoTexto;
       }
 
       // PAGAMENTO DINÂMICO
-      else if (
-        message === "3" ||
-        message.includes("preço") ||
-        message.includes("valor") ||
-        message.includes("quanto custa") ||
-        message.includes("comprar") ||
-        message.includes("acesso")
-      ) {
+      else if (message === "3" || message.includes("preço")) {
 
         const preference = await axios.post(
           "https://api.mercadopago.com/checkout/preferences",
           {
             items: [
               {
-                title: "MasterPlay",
+                title: "MasterPlay Teste",
                 quantity: 1,
-                unit_price: 1.00
+                unit_price: 1.0
               }
             ],
             metadata: { phone: from },
@@ -238,17 +229,12 @@ Após o pagamento, seu acesso será liberado automaticamente ✅`;
       }
 
       // SUPORTE
-      else if (
-        message === "4" ||
-        message.includes("suporte") ||
-        message.includes("ajuda")
-      ) {
+      else if (message === "4") {
 
         resposta = `👨‍💻 Você escolheu falar com o suporte.
 
 Aguarde que entraremos em contato ✅`;
 
-        // Notificar você
         await axios.get(
           `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
           {
@@ -262,7 +248,7 @@ Aguarde que entraremos em contato ✅`;
       }
 
       // FAQ
-      else if (message === "5" || message.includes("perguntas")) {
+      else if (message === "5") {
         resposta = mensagemFAQ;
       }
 
@@ -273,30 +259,22 @@ Aguarde que entraremos em contato ✅`;
       await axios.get(
         `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
         {
-          params: {
-            token: TOKEN,
-            to: from,
-            body: resposta
-          }
+          params: { token: TOKEN, to: from, body: resposta }
         }
       );
     }
 
     res.sendStatus(200);
-
   } catch (error) {
     console.error("Erro WhatsApp:", error.response?.data || error.message);
     res.sendStatus(200);
   }
 });
 
-// =============================
-// WEBHOOK MERCADO PAGO
-// =============================
+// ================= WEBHOOK MERCADO PAGO =================
 
 app.post("/mercadopago", async (req, res) => {
   try {
-
     if (req.body.type !== "payment") return res.sendStatus(200);
 
     const paymentId = req.body.data?.id;
@@ -311,7 +289,6 @@ app.post("/mercadopago", async (req, res) => {
     );
 
     if (payment.data.status === "approved") {
-
       const phone = payment.data.metadata?.phone;
 
       await axios.get(
@@ -332,7 +309,6 @@ Aproveite ✅`
     }
 
     res.sendStatus(200);
-
   } catch (error) {
     console.error("Erro Mercado Pago:", error.response?.data || error.message);
     res.sendStatus(200);
