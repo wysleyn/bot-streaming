@@ -147,6 +147,9 @@ Não. Você pode instalar novamente no novo aparelho.
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
 });
+app.get("/whatsapp", (req, res) => {
+  res.redirect("https://wa.me/5524999581944?text=Quero%20conhecer%20melhor%20a%20MasterPlay");
+});
 // ================= DOWNLOAD APK PROFISSIONAL =================
 
 app.get("/apk", async (req, res) => {
