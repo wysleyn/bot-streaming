@@ -327,3 +327,45 @@ Aproveite ✅`
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+else if (message === "3") {
+
+  try {
+
+    console.log("🛒 Criando pagamento para:", from);
+
+    const preference = await axios.post(
+      "https://api.mercadopago.com/checkout/preferences",
+      {
+        items: [
+          {
+            title: "MasterPlay",
+            quantity: 1,
+            unit_price: 1.00
+          }
+        ],
+        metadata: { phone: from },
+        notification_url:
+          "https://bot-streaming-41zm.onrender.com/mercadopago"
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${MP_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    console.log("✅ Preferência criada:", preference.data);
+
+    resposta = `🔥 *Acesso Vitalício MasterPlay*
+
+👉 ${preference.data.init_point}
+
+Após o pagamento, seu acesso será liberado automaticamente ✅`;
+
+  } catch (error) {
+
+    console.error("❌ ERRO AO CRIAR PAGAMENTO:", error.response?.data || error.message);
+
+    resposta = "⚠️ Ocorreu um erro ao gerar o pagamento. Tente novamente em instantes.";
+  }
+}
