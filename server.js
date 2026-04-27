@@ -227,7 +227,7 @@ app.post("/webhook", async (req, res) => {
               {
                 title: "MasterPlay",
                 quantity: 1,
-                unit_price: 1.00
+                unit_price: 49.90
               }
             ],
             metadata: { phone: from },
