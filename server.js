@@ -13,7 +13,7 @@ const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
 // MERCADO PAGO PRODUÇÃO
-const MP_ACCESS_TOKEN = "COLE_SEU_ACCESS_TOKEN_AQUI";
+const MP_ACCESS_TOKEN = "APP_USR-6837348167992487-042516-9a8c1623514fc61737d98fc71f832f25-256715443";
 
 // APK
 const APK_LINK = "https://files.catbox.moe/vm1bsw";
@@ -21,7 +21,7 @@ const APK_LINK = "https://files.catbox.moe/vm1bsw";
 // VÍDEO
 const VIDEO_URL = "https://files.catbox.moe/hdreo7.mp4";
 
-// SEU NÚMERO CORRETO
+// SEU NÚMERO PARA SUPORTE
 const SEU_NUMERO = "5524999096129";
 
 // ================= MENSAGENS =================
@@ -64,6 +64,10 @@ const mensagemComoFunciona = `📱 *Como funciona?*
 2️⃣ Recebe o aplicativo imediatamente  
 3️⃣ Instala no seu celular  
 4️⃣ Acesso liberado ✅
+
+Sem mensalidade.
+Sem renovação automática.
+Sem cobranças futuras.
 
 ━━━━━━━━━━━━━━━
 
@@ -160,6 +164,7 @@ app.post("/webhook", async (req, res) => {
 
       let resposta = "";
 
+      // MENU INTELIGENTE
       if (
         message === "oi" ||
         message === "menu" ||
@@ -169,11 +174,11 @@ app.post("/webhook", async (req, res) => {
         resposta = mensagemInicial;
       }
 
-      else if (message === "1") {
+      else if (message === "1" || message.includes("como funciona")) {
         resposta = mensagemComoFunciona;
       }
 
-      else if (message === "2") {
+      else if (message === "2" || message.includes("conteúdo")) {
 
         await axios.post(
           `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
@@ -190,7 +195,11 @@ app.post("/webhook", async (req, res) => {
         resposta = mensagemConteudoTexto;
       }
 
-      else if (message === "3") {
+      else if (
+        message === "3" ||
+        message.includes("preço") ||
+        message.includes("valor")
+      ) {
 
         const preference = await axios.post(
           "https://api.mercadopago.com/checkout/preferences",
@@ -219,11 +228,8 @@ Valor único:
 
 💰 R$ 49,90
 
-Você paga uma vez e usa para sempre.
-
 ✅ Sem mensalidade  
-✅ Liberação rápida após pagamento  
-✅ Acesso imediato  
+✅ Liberação automática  
 
 ━━━━━━━━━━━━━━━
 
@@ -273,6 +279,7 @@ Aguarde que entraremos em contato ✅`;
     }
 
     res.sendStatus(200);
+
   } catch (error) {
     console.error("Erro WhatsApp:", error.response?.data || error.message);
     res.sendStatus(200);
@@ -327,45 +334,3 @@ Aproveite ✅`
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-else if (message === "3") {
-
-  try {
-
-    console.log("🛒 Criando pagamento para:", from);
-
-    const preference = await axios.post(
-      "https://api.mercadopago.com/checkout/preferences",
-      {
-        items: [
-          {
-            title: "MasterPlay",
-            quantity: 1,
-            unit_price: 1.00
-          }
-        ],
-        metadata: { phone: from },
-        notification_url:
-          "https://bot-streaming-41zm.onrender.com/mercadopago"
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${MP_ACCESS_TOKEN}`
-        }
-      }
-    );
-
-    console.log("✅ Preferência criada:", preference.data);
-
-    resposta = `🔥 *Acesso Vitalício MasterPlay*
-
-👉 ${preference.data.init_point}
-
-Após o pagamento, seu acesso será liberado automaticamente ✅`;
-
-  } catch (error) {
-
-    console.error("❌ ERRO AO CRIAR PAGAMENTO:", error.response?.data || error.message);
-
-    resposta = "⚠️ Ocorreu um erro ao gerar o pagamento. Tente novamente em instantes.";
-  }
-}
