@@ -13,16 +13,16 @@ const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 
 // MERCADO PAGO PRODUÇÃO
-const MP_ACCESS_TOKEN = "APP_USR-6837348167992487-042516-9a8c1623514fc61737d98fc71f832f25-256715443";
+const MP_ACCESS_TOKEN = "COLE_SEU_ACCESS_TOKEN_AQUI";
 
 // APK
 const APK_LINK = "https://files.catbox.moe/vm1bsw";
 
-// VÍDEO DEMONSTRATIVO
+// VÍDEO
 const VIDEO_URL = "https://files.catbox.moe/hdreo7.mp4";
 
-// SEU NÚMERO PARA SUPORTE
-const SEU_NUMERO = "55999096129";
+// SEU NÚMERO CORRETO
+const SEU_NUMERO = "5524999096129";
 
 // ================= MENSAGENS =================
 
@@ -126,7 +126,7 @@ O foco é conteúdo sob demanda.
 
 🔹 Funciona na televisão?
 O aplicativo não é instalado diretamente na TV.
-Mas você pode espelhar o conteúdo para a televisão 📺✨
+Mas você pode espelhar o conteúdo 📺✨
 
 🔹 Se eu trocar de celular, perco acesso?
 Não. Você pode instalar novamente no novo aparelho.
@@ -160,7 +160,6 @@ app.post("/webhook", async (req, res) => {
 
       let resposta = "";
 
-      // MENU E GATILHOS
       if (
         message === "oi" ||
         message === "menu" ||
@@ -170,17 +169,11 @@ app.post("/webhook", async (req, res) => {
         resposta = mensagemInicial;
       }
 
-      // COMO FUNCIONA
-      else if (message === "1" || message.includes("como funciona")) {
+      else if (message === "1") {
         resposta = mensagemComoFunciona;
       }
 
-      // CONTEÚDOS
-      else if (
-        message === "2" ||
-        message.includes("conteúdo") ||
-        message.includes("filmes")
-      ) {
+      else if (message === "2") {
 
         await axios.post(
           `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
@@ -197,17 +190,16 @@ app.post("/webhook", async (req, res) => {
         resposta = mensagemConteudoTexto;
       }
 
-      // PAGAMENTO DINÂMICO
-      else if (message === "3" || message.includes("preço")) {
+      else if (message === "3") {
 
         const preference = await axios.post(
           "https://api.mercadopago.com/checkout/preferences",
           {
             items: [
               {
-                title: "MasterPlay Teste",
+                title: "MasterPlay",
                 quantity: 1,
-                unit_price: 1.0
+                unit_price: 1.00
               }
             ],
             metadata: { phone: from },
@@ -221,33 +213,49 @@ app.post("/webhook", async (req, res) => {
           }
         );
 
-        resposta = `🔥 *Pagamento MasterPlay*
+        resposta = `🔥 *Acesso Vitalício MasterPlay*
+
+Valor único:
+
+💰 R$ 49,90
+
+Você paga uma vez e usa para sempre.
+
+✅ Sem mensalidade  
+✅ Liberação rápida após pagamento  
+✅ Acesso imediato  
+
+━━━━━━━━━━━━━━━
 
 👉 ${preference.data.init_point}
 
-Após o pagamento, seu acesso será liberado automaticamente ✅`;
+Após o pagamento, seu acesso será liberado automaticamente ✅
+
+━━━━━━━━━━━━━━━
+
+1️⃣ Como funciona  
+2️⃣ Ver conteúdos  
+4️⃣ Falar com suporte  
+5️⃣ Perguntas frequentes`;
       }
 
-      // SUPORTE
       else if (message === "4") {
 
         resposta = `👨‍💻 Você escolheu falar com o suporte.
 
 Aguarde que entraremos em contato ✅`;
 
-        await axios.get(
+        await axios.post(
           `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
-          {
-            params: {
-              token: TOKEN,
-              to: SEU_NUMERO,
-              body: `📞 NOVO PEDIDO DE SUPORTE\n\nNúmero: ${from}`
-            }
-          }
+          new URLSearchParams({
+            token: TOKEN,
+            to: SEU_NUMERO,
+            body: `📞 NOVO PEDIDO DE SUPORTE\n\nNúmero do cliente: ${from}`
+          }).toString(),
+          { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
         );
       }
 
-      // FAQ
       else if (message === "5") {
         resposta = mensagemFAQ;
       }
@@ -289,6 +297,7 @@ app.post("/mercadopago", async (req, res) => {
     );
 
     if (payment.data.status === "approved") {
+
       const phone = payment.data.metadata?.phone;
 
       await axios.get(
