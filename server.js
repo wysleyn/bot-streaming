@@ -16,7 +16,7 @@ const INSTANCE_ID = "171812";
 const MP_ACCESS_TOKEN = "APP_USR-6837348167992487-042516-9a8c1623514fc61737d98fc71f832f25-256715443";
 
 // APK
-const APK_LINK = "https://files.catbox.moe/vm1bsw";
+const APK_LINK = "https://bot-streaming-41zm.onrender.com/apk";
 
 // VÍDEO
 const VIDEO_URL = "https://files.catbox.moe/hdreo7.mp4";
@@ -147,7 +147,26 @@ Não. Você pode instalar novamente no novo aparelho.
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
 });
+// ================= DOWNLOAD APK PROFISSIONAL =================
 
+app.get("/apk", async (req, res) => {
+  try {
+
+    const fileResponse = await axios.get(
+      "https://files.catbox.moe/vm1bsw",
+      { responseType: "stream" }
+    );
+
+    res.setHeader("Content-Disposition", "attachment; filename=masterplay.apk");
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+
+    fileResponse.data.pipe(res);
+
+  } catch (error) {
+    console.error("Erro ao baixar APK:", error.message);
+    res.status(500).send("Erro ao baixar APK.");
+  }
+});
 // ================= WEBHOOK WHATSAPP =================
 
 app.post("/webhook", async (req, res) => {
