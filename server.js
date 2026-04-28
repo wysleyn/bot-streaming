@@ -43,7 +43,7 @@ Escolha uma opção abaixo:
 
 Digite apenas o número da opção 👇`;
 
-const mensagemTeste = `Ótima pergunta 😊
+const mensagemTeste = `
 
 A MasterPlay não possui versão de teste porque o aplicativo não utiliza login.
 
@@ -61,29 +61,29 @@ Mas pode ficar tranquilo(a):
 
 Prefere ver como funciona ou já quer garantir seu acesso agora?`;
 
-const mensagemInicial = `👋 Seja bem-vindo(a) à *MasterPlay* 🎬🔥
+const mensagemInicial = `🎬🔥 Chegou a forma mais inteligente de assistir tudo pagando apenas *UMA vez*.
 
-Hoje, para ter acesso completo aos principais conteúdos, você precisaria assinar várias plataformas como:
+Sem Netflix.
+Sem Prime.
+Sem Disney.
+Sem várias assinaturas todo mês.
 
-📺 Netflix – R$ 39,90/mês  
-🎬 Prime Video – R$ 19,90/mês  
-🦁 Disney+ – R$ 33,90/mês  
-🎥 HBO – R$ 34,90/mês  
-📡 Globoplay – R$ 27,90/mês  
-🎌 Crunchyroll – R$ 14,99/mês  
-🌎 Rakuten Viki – R$ 25,99/mês  
-🍎 Apple TV+ – R$ 21,90/mês  
-🎞 Paramount+ – R$ 19,90/mês  
-⭐ Star+ – R$ 40,90/mês  
+Com a *MasterPlay* você tem acesso a:
 
-💸 Somando tudo isso, você poderia gastar facilmente mais de *R$ 200 todos os meses*.
+🍿 Filmes atualizados  
+📺 Séries completas  
+🎌 Animes  
+🌎 Doramas  
+🔥 Conteúdos organizados e fáceis de usar  
 
-Com a *MasterPlay* você paga apenas *UMA única vez*.
+Tudo dentro de um único aplicativo 📱✨
 
 ✅ Pagamento único  
-✅ Sem mensalidade  
 ✅ Acesso vitalício  
-✅ Conteúdos organizados e atualizados  
+✅ Sem mensalidade  
+✅ Liberação automática após pagamento  
+
+Você paga uma vez e usa para sempre.
 
 ━━━━━━━━━━━━━━━
 
@@ -91,8 +91,9 @@ Com a *MasterPlay* você paga apenas *UMA única vez*.
 2️⃣ Ver conteúdos  
 3️⃣ Garantir acesso agora  
 4️⃣ Falar com suporte  
-5️⃣ Perguntas frequentes`;
+5️⃣ Perguntas frequentes  
 
+Digite apenas o número da opção 👇`;
 const mensagemComoFunciona = `📱 *Como funciona?*
 
 1️⃣ Você realiza o pagamento único  
