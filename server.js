@@ -24,7 +24,42 @@ const VIDEO_URL = "https://files.catbox.moe/hdreo7.mp4";
 // SEU NÚMERO PARA SUPORTE
 const SEU_NUMERO = "5524999096129";
 
+// ================= CONTROLES =================
+
+const atendimentosHumanos = {};
+const pagamentosPendentes = {};
+
 // ================= MENSAGENS =================
+
+const mensagemMenu = `📋 *Menu Principal – MasterPlay*
+
+Escolha uma opção abaixo:
+
+1️⃣ Como funciona  
+2️⃣ Ver conteúdos  
+3️⃣ Garantir acesso agora  
+4️⃣ Falar com suporte  
+5️⃣ Perguntas frequentes  
+
+Digite apenas o número da opção 👇`;
+
+const mensagemTeste = `Ótima pergunta 😊
+
+A MasterPlay não possui versão de teste porque o aplicativo não utiliza login.
+
+Isso significa que, quando ele é instalado, o acesso já fica totalmente liberado e vitalício.  
+Se eu enviasse como teste, você já teria o aplicativo completo.
+
+Para manter a segurança do acesso, a liberação acontece somente após o pagamento ✅
+
+Mas pode ficar tranquilo(a):
+
+✅ Pagamento único (sem mensalidade)  
+✅ Acesso vitalício  
+✅ Envio imediato após confirmação  
+✅ Pagamento 100% seguro pelo Mercado Pago 🔒  
+
+Prefere ver como funciona ou já quer garantir seu acesso agora?`;
 
 const mensagemInicial = `👋 Seja bem-vindo(a) à *MasterPlay* 🎬🔥
 
@@ -147,14 +182,11 @@ Não. Você pode instalar novamente no novo aparelho.
 app.get("/", (req, res) => {
   res.send("✅ MasterPlay Bot Online!");
 });
-app.get("/whatsapp", (req, res) => {
-  res.redirect("https://wa.me/5524999581944?text=Quero%20conhecer%20melhor%20a%20MasterPlay");
-});
-// ================= DOWNLOAD APK PROFISSIONAL =================
+
+// ================= DOWNLOAD APK =================
 
 app.get("/apk", async (req, res) => {
   try {
-
     const fileResponse = await axios.get(
       "https://files.catbox.moe/vm1bsw",
       { responseType: "stream" }
@@ -170,37 +202,48 @@ app.get("/apk", async (req, res) => {
     res.status(500).send("Erro ao baixar APK.");
   }
 });
+
 // ================= WEBHOOK WHATSAPP =================
 
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
 
-    if (
-      body.event_type === "message_received" &&
-      body.data &&
-      body.data.fromMe === false
-    ) {
+    if (body.event_type === "message_received" && body.data) {
+
       const from = body.data.from.replace("@c.us", "");
-      const message = body.data.body.trim().toLowerCase();
+      const message = body.data.body?.trim().toLowerCase();
+
+      // Ativa atendimento humano se você responder
+      if (body.data.fromMe === true) {
+        atendimentosHumanos[from] = true;
+        return res.sendStatus(200);
+      }
+
+      // Se estiver em atendimento humano
+      if (atendimentosHumanos[from]) {
+        if (["1","2","3","4","5","menu"].includes(message)) {
+          atendimentosHumanos[from] = false;
+        } else {
+          return res.sendStatus(200);
+        }
+      }
 
       let resposta = "";
 
-      // MENU INTELIGENTE
       if (
         message === "oi" ||
-        message === "menu" ||
         message.includes("quero conhecer") ||
         message.includes("quero saber")
       ) {
         resposta = mensagemInicial;
       }
 
-      else if (message === "1" || message.includes("como funciona")) {
-        resposta = mensagemComoFunciona;
+      else if (message === "menu") {
+        resposta = mensagemMenu;
       }
 
-      else if (message === "2" || message.includes("conteúdo")) {
+      else if (message.includes("teste") || message.includes("testar")) {
 
         await axios.post(
           `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
@@ -208,8 +251,27 @@ app.post("/webhook", async (req, res) => {
             token: TOKEN,
             to: from,
             video: VIDEO_URL,
-            caption:
-              "🎬 Esse é o aplicativo funcionando na prática.\n\nTudo organizado, rápido e fácil de usar 📱✨"
+            caption: "🎬 Olha o aplicativo funcionando na prática."
+          }).toString(),
+          { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+        );
+
+        resposta = mensagemTeste;
+      }
+
+      else if (message === "1") {
+        resposta = mensagemComoFunciona;
+      }
+
+      else if (message === "2") {
+
+        await axios.post(
+          `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/video`,
+          new URLSearchParams({
+            token: TOKEN,
+            to: from,
+            video: VIDEO_URL,
+            caption: "🎬 Esse é o aplicativo funcionando na prática."
           }).toString(),
           { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
         );
@@ -217,54 +279,66 @@ app.post("/webhook", async (req, res) => {
         resposta = mensagemConteudoTexto;
       }
 
-      else if (
-        message === "3" ||
-        message.includes("preço") ||
-        message.includes("valor")
-      ) {
+      else if (message === "3") {
 
         const preference = await axios.post(
           "https://api.mercadopago.com/checkout/preferences",
           {
-            items: [
-              {
-                title: "MasterPlay",
-                quantity: 1,
-                unit_price: 49.90
-              }
-            ],
+            items: [{ title: "MasterPlay", quantity: 1, unit_price: 49.90 }],
             metadata: { phone: from },
             notification_url:
               "https://bot-streaming-41zm.onrender.com/mercadopago"
           },
-          {
-            headers: {
-              Authorization: `Bearer ${MP_ACCESS_TOKEN}`
-            }
-          }
+          { headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` } }
         );
+
+        pagamentosPendentes[from] = true;
+
+        // 20 minutos
+        setTimeout(async () => {
+          if (pagamentosPendentes[from]) {
+            await axios.get(
+              `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
+              {
+                params: {
+                  token: TOKEN,
+                  to: from,
+                  body: `Oi 😊
+
+Vi que você iniciou a liberação mas ainda não finalizou.
+
+Posso te ajudar em algo?`
+                }
+              }
+            );
+          }
+        }, 20 * 60 * 1000);
+
+        // 1 hora
+        setTimeout(async () => {
+          if (pagamentosPendentes[from]) {
+            await axios.get(
+              `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
+              {
+                params: {
+                  token: TOKEN,
+                  to: from,
+                  body: `Ainda consigo liberar seu acesso por R$ 49,90 ✅
+
+Quer que eu gere o link novamente?`
+                }
+              }
+            );
+          }
+        }, 60 * 60 * 1000);
 
         resposta = `🔥 *Acesso Vitalício MasterPlay*
 
-Valor único:
-
-💰 R$ 49,90
-
-✅ Sem mensalidade  
-✅ Liberação automática  
-
-━━━━━━━━━━━━━━━
+💰 R$ 49,90 pagamento único
 
 👉 ${preference.data.init_point}
 
-Após o pagamento, seu acesso será liberado automaticamente ✅
-
-━━━━━━━━━━━━━━━
-
-1️⃣ Como funciona  
-2️⃣ Ver conteúdos  
-4️⃣ Falar com suporte  
-5️⃣ Perguntas frequentes`;
+Após o pagamento, o acesso é liberado automaticamente ✅`;
       }
 
       else if (message === "4") {
@@ -278,7 +352,7 @@ Aguarde que entraremos em contato ✅`;
           new URLSearchParams({
             token: TOKEN,
             to: SEU_NUMERO,
-            body: `📞 NOVO PEDIDO DE SUPORTE\n\nNúmero do cliente: ${from}`
+            body: `📞 NOVO PEDIDO DE SUPORTE\nNúmero: ${from}`
           }).toString(),
           { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
         );
@@ -318,16 +392,14 @@ app.post("/mercadopago", async (req, res) => {
 
     const payment = await axios.get(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${MP_ACCESS_TOKEN}`
-        }
-      }
+      { headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` } }
     );
 
     if (payment.data.status === "approved") {
 
       const phone = payment.data.metadata?.phone;
+
+      pagamentosPendentes[phone] = false;
 
       await axios.get(
         `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
@@ -347,6 +419,7 @@ Aproveite ✅`
     }
 
     res.sendStatus(200);
+
   } catch (error) {
     console.error("Erro Mercado Pago:", error.response?.data || error.message);
     res.sendStatus(200);
