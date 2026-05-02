@@ -285,7 +285,7 @@ app.post("/webhook", async (req, res) => {
         const preference = await axios.post(
           "https://api.mercadopago.com/checkout/preferences",
           {
-            items: [{ title: "MasterPlay", quantity: 1, unit_price: 49.90 }],
+            items: [{ title: "MasterPlay", quantity: 1, unit_price: 19.90 }],
             metadata: { phone: from },
             notification_url:
               "https://bot-streaming-41zm.onrender.com/mercadopago"
@@ -324,7 +324,7 @@ Posso te ajudar em algo?`
                 params: {
                   token: TOKEN,
                   to: from,
-                  body: `Ainda consigo liberar seu acesso por R$ 49,90 ✅
+                  body: `Ainda consigo liberar seu acesso por R$ 19,90 ✅
 
 Quer que eu gere o link novamente?`
                 }
@@ -335,7 +335,7 @@ Quer que eu gere o link novamente?`
 
         resposta = `🔥 *Acesso Vitalício MasterPlay*
 
-💰 R$ 49,90 pagamento único
+💰 R$ 19,90 pagamento único
 
 👉 ${preference.data.init_point}
 
