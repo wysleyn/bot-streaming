@@ -360,7 +360,16 @@ ${pixCode}
 ⚠️ O código expira em 30 minutos.
 
 Digite *menu* para voltar.`);
-
+await axios.post(
+  `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/image`,
+  new URLSearchParams({
+    token: TOKEN,
+    to: from,
+    image: `data:image/png;base64,${pixBase64}`,
+    caption: "✅ Escaneie o QR Code para pagar"
+  }).toString(),
+  { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+);
   }
 
   else if (message === "2") {
