@@ -169,9 +169,10 @@ Digite *menu* para voltar.`);
             await enviarMensagem(from, mensagemIndique);
           }
 
-          else if (message === "5") {
-            await enviarMensagem(from, mensagemJaCliente);
-          }
+         else if (message === "5") {
+  await atualizarUsuario(from, { etapa: "area_cliente" });
+  await enviarMensagem(from, mensagemJaCliente);
+}
 
           else if (message === "6" || message === "suporte") {
             await atualizarUsuario(from, { etapa: "suporte" });
@@ -358,36 +359,34 @@ case "confirmando_pagamento":
 
     await enviarMensagem(from, "🔄 Gerando seu pagamento PIX...");
 
-const payment = await axios.post(
-  "https://api.mercadopago.com/v1/payments",
-  {
-    transaction_amount: user.valor_final_temp,
-    description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
-    payment_method_id: "pix",
-    payer: {
-      email: "cliente@atlas.com",
-      first_name: "Cliente",
-      last_name: "Atlas"
-    }
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-      "X-Idempotency-Key": `pix-${Date.now()}-${from}`
-    }
-  }
-);
+    const payment = await axios.post(
+      "https://api.mercadopago.com/v1/payments",
+      {
+        transaction_amount: user.valor_final_temp,
+        description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
+        payment_method_id: "pix",
+        payer: {
+          email: "cliente@atlas.com",
+          first_name: "Cliente",
+          last_name: "Atlas"
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+          "X-Idempotency-Key": `pix-${Date.now()}-${from}`
+        }
+      }
+    );
 
-// ✅ salvar payment_id DEPOIS que gerou o PIX
-await atualizarUsuario(from, {
-  payment_id: payment.data.id
-});
+    await atualizarUsuario(from, {
+      payment_id: payment.data.id
+    });
 
-   const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
-const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
+    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
+    const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
 
-// Mensagem informativa
-await enviarMensagem(from, `✅ PIX gerado com sucesso!
+    await enviarMensagem(from, `✅ PIX gerado com sucesso!
 
 💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
 
@@ -396,20 +395,18 @@ Você pode pagar de duas formas:
 1️⃣ Escaneando o QR Code abaixo  
 2️⃣ Copiando o código da próxima mensagem 👇`);
 
-// Código sozinho (facilita copiar)
-await enviarMensagem(from, pixCode);
+    await enviarMensagem(from, pixCode);
 
-// Enviar QR Code
-await axios.post(
-  `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/image`,
-  new URLSearchParams({
-    token: TOKEN,
-    to: from,
-    image: `data:image/png;base64,${pixBase64}`,
-    caption: "✅ Escaneie o QR Code para pagar"
-  }).toString(),
-  { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-);
+    await axios.post(
+      `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/image`,
+      new URLSearchParams({
+        token: TOKEN,
+        to: from,
+        image: `data:image/png;base64,${pixBase64}`,
+        caption: "✅ Escaneie o QR Code para pagar"
+      }).toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
   }
 
   else if (message === "2") {
@@ -418,6 +415,109 @@ await axios.post(
   }
 
   break;
+
+
+
+case "area_cliente":
+
+  if (message === "1") {
+
+    if (!user.plano_fim || !user.plano_temp || !user.telas_temp) {
+
+      await enviarMensagem(from, `⚠️ Não encontramos um plano ativo.
+
+Digite *menu* para voltar.`);
+      break;
+    }
+
+    const vencimento = new Date(user.plano_fim).toLocaleDateString("pt-BR");
+
+    await atualizarUsuario(from, { etapa: "renovando_plano" });
+
+    await enviarMensagem(from, `📅 Seu plano atual vence em: ${vencimento}
+
+Deseja renovar agora mantendo:
+
+📅 ${user.plano_temp}
+📺 ${user.telas_temp} aparelhos
+
+1️⃣ Sim, renovar agora
+2️⃣ Voltar
+
+Digite *menu* para voltar.`);
+  }
+
+  else if (message === "2" || message === "3" || message === "4") {
+    await enviarMensagem(from, "👨‍💻 Descreva sua dúvida que vou te ajudar ✅");
+    await enviarMensagem(SEU_NUMERO, `📞 Cliente solicitou suporte\nNúmero: ${from}`);
+  }
+
+  break;
+
+
+
+case "renovando_plano":
+
+  if (message === "1") {
+
+    await enviarMensagem(from, "🔄 Gerando PIX para renovação...");
+
+    const payment = await axios.post(
+      "https://api.mercadopago.com/v1/payments",
+      {
+        transaction_amount: user.valor_final_temp,
+        description: `Renovação ${user.plano_temp} - ${user.telas_temp} telas`,
+        payment_method_id: "pix",
+        payer: {
+          email: "cliente@atlas.com",
+          first_name: "Cliente",
+          last_name: "Atlas"
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+          "X-Idempotency-Key": `renovacao-${Date.now()}-${from}`
+        }
+      }
+    );
+
+    await atualizarUsuario(from, {
+      payment_id: payment.data.id,
+      etapa: "menu"
+    });
+
+    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
+    const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
+
+    await enviarMensagem(from, `✅ PIX de renovação gerado!
+
+💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
+
+Copie o código da próxima mensagem ou escaneie o QR abaixo 👇`);
+
+    await enviarMensagem(from, pixCode);
+
+    await axios.post(
+      `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/image`,
+      new URLSearchParams({
+        token: TOKEN,
+        to: from,
+        image: `data:image/png;base64,${pixBase64}`,
+        caption: "✅ Escaneie o QR Code para renovar"
+      }).toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
+
+  }
+
+  else if (message === "2") {
+    await atualizarUsuario(from, { etapa: "menu" });
+    await enviarMensagem(from, mensagemMenu);
+  }
+
+  break; 
+
 
         default:
           await atualizarUsuario(from, { etapa: "menu" });
