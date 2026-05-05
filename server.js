@@ -24,35 +24,52 @@ const BOT_ATIVO = true;
 
 // ================= MENSAGENS =================
 
-const mensagemBoasVindas = `📡🔥 *ATLAS – Acesso Completo a TV e Streaming*
-
-Com o ATLAS você tem:
-
-📺 Canais ao vivo  
-🎬 Filmes  
-📺 Séries  
-⚽ Esportes  
-🎌 Animes e doramas  
-👶 Infantil  
-
-✅ Funciona em TV, celular e computador`;
-
 const mensagemMenu = `📋 *Menu ATLAS*
+
++ de 1.000 clientes já utilizam ✅
 
 1️⃣ Teste grátis  
 2️⃣ Ver planos  
-3️⃣ Indique e ganhe  
-4️⃣ Suporte  
+3️⃣ Perguntas frequentes  
+4️⃣ Indique e ganhe  
+5️⃣ Já sou cliente  
+6️⃣ Suporte  
 
-Digite o número da opção 👇`;
+Digite a opção 👇
+Digite *menu* para voltar.`;
 
-const mensagemAparelho = `✅ Vamos liberar seu teste gratuito (3 horas).
+const mensagemFAQ = `❓ *Perguntas Frequentes*
 
-Em qual aparelho você vai instalar?
+🔹 Funciona na minha TV?
+Sim, Smart TV, TV Box, Fire TV, celular e computador.
 
-1️⃣ Smart TV / TV Box  
-2️⃣ Celular  
-3️⃣ Notebook / Computador`;
+🔹 Posso testar antes?
+Sim, oferecemos teste gratuito de 3 horas.
+
+🔹 O acesso cai muito?
+Sistema estável e atualizado constantemente.
+
+Digite *menu* para voltar.`;
+
+const mensagemIndique = `💰 *Indique e Ganhe – ATLAS*
+
+A cada 2 amigos ativos:
+🎁 Você ganha 1 mês grátis.
+
+Após 10 ativos:
+💵 Você ganha R$10 por cliente.
+
+Digite *menu* para voltar.`;
+
+const mensagemJaCliente = `👤 *Área do Cliente*
+
+1️⃣ Renovar plano  
+2️⃣ Problema no acesso  
+3️⃣ Alterar dispositivo  
+4️⃣ Falar com suporte  
+
+Digite a opção 👇
+Digite *menu* para voltar.`;
 
 const mensagemPlanos = `🔥 *PLANOS ATLAS*
 
@@ -63,17 +80,10 @@ const mensagemPlanos = `🔥 *PLANOS ATLAS*
 5️⃣ 6 meses – R$ 149,90  
 6️⃣ 12 meses – R$ 249,90  
 
-Digite o plano desejado 👇`;
+Digite o plano desejado 👇
+Digite *menu* para voltar.`;
 
-const mensagemIndique = `💰 *Indique e Ganhe – ATLAS*
-
-A cada 2 amigos ativos:
-🎁 Você ganha 1 mês grátis.
-
-Após 10 ativos:
-💵 Você ganha R$10 por cliente.`;
-
-// ================= FUNÇÃO USUÁRIO =================
+// ================= FUNÇÕES =================
 
 async function criarOuBuscarUsuario(phone) {
   const { data: existingUser } = await supabase
@@ -87,32 +97,25 @@ async function criarOuBuscarUsuario(phone) {
   const ultimos4 = phone.slice(-4);
   const cupom = `ATLAS${ultimos4}`;
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("users")
     .insert([{ phone, cupom, etapa: "menu" }])
     .select()
     .single();
 
-  if (error) {
-    console.error("Erro ao criar usuário:", error);
-    return null;
-  }
-
   return data;
 }
 
-async function atualizarEtapa(phone, etapa) {
-  await supabase
-    .from("users")
-    .update({ etapa })
-    .eq("phone", phone);
+async function atualizarUsuario(phone, dados) {
+  await supabase.from("users").update(dados).eq("phone", phone);
 }
 
-// ================= STATUS =================
-
-app.get("/", (req, res) => {
-  res.send("✅ ATLAS Bot Online!");
-});
+async function enviarMensagem(to, body) {
+  await axios.get(
+    `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
+    { params: { token: TOKEN, to, body } }
+  );
+}
 
 // ================= WEBHOOK =================
 
@@ -127,40 +130,52 @@ app.post("/webhook", async (req, res) => {
 
       const user = await criarOuBuscarUsuario(from);
       if (!user) return res.sendStatus(200);
-
       if (!BOT_ATIVO) return res.sendStatus(200);
 
-      // ✅ MENU UNIVERSAL
+      // MENU UNIVERSAL
       if (message === "menu") {
-        await atualizarEtapa(from, "menu");
-        await enviarMensagem(from, mensagemBoasVindas + "\n\n" + mensagemMenu);
+        await atualizarUsuario(from, { etapa: "menu" });
+        await enviarMensagem(from, mensagemMenu);
         return res.sendStatus(200);
       }
 
-      // ✅ FLUXO BASEADO NA ETAPA
       switch (user.etapa) {
 
         case "menu":
 
           if (message === "1") {
-            await atualizarEtapa(from, "escolhendo_aparelho");
-            await enviarMensagem(from, mensagemAparelho);
+            await atualizarUsuario(from, { etapa: "escolhendo_aparelho" });
+            await enviarMensagem(from, `✅ Teste gratuito (3 horas)
+
+Escolha o aparelho:
+
+1️⃣ Smart TV / TV Box
+2️⃣ Celular
+3️⃣ Notebook
+
+Digite *menu* para voltar.`);
           }
 
           else if (message === "2") {
-            await atualizarEtapa(from, "escolhendo_plano");
+            await atualizarUsuario(from, { etapa: "escolhendo_plano" });
             await enviarMensagem(from, mensagemPlanos);
           }
 
           else if (message === "3") {
-            await enviarMensagem(from, mensagemIndique);
+            await enviarMensagem(from, mensagemFAQ);
           }
 
           else if (message === "4") {
-            await atualizarEtapa(from, "suporte");
+            await enviarMensagem(from, mensagemIndique);
+          }
 
-            await enviarMensagem(from, "👨‍💻 Você está falando com o suporte. Aguarde atendimento ✅");
+          else if (message === "5") {
+            await enviarMensagem(from, mensagemJaCliente);
+          }
 
+          else if (message === "6" || message === "suporte") {
+            await atualizarUsuario(from, { etapa: "suporte" });
+            await enviarMensagem(from, "👨‍💻 Descreva sua dúvida que vou te ajudar ✅");
             await enviarMensagem(SEU_NUMERO, `📞 Cliente chamou suporte\nNúmero: ${from}`);
           }
 
@@ -172,30 +187,121 @@ app.post("/webhook", async (req, res) => {
 
         case "escolhendo_aparelho":
 
-          if (["1","2","3"].includes(message)) {
-            await atualizarEtapa(from, "menu");
-            await enviarMensagem(from, "✅ Perfeito! Vou preparar seu teste.\nEm instantes envio seu login.");
+          let instrucao = "";
+
+          if (message === "1") {
+            instrucao = `📺 Instale o app *Fun Play* na loja da sua TV.
+
+Se não encontrar ou tiver dificuldade digite *suporte*.
+
+Digite *menu* para voltar.`;
+          }
+
+          else if (message === "2") {
+            instrucao = `📱 Instale o app *Blessed Player* na Play Store ou App Store.
+
+Se tiver dificuldade digite *suporte*.
+
+Digite *menu* para voltar.`;
+          }
+
+          else if (message === "3") {
+            instrucao = `💻 Acesse o Web Player no navegador.
+
+Se tiver dificuldade digite *suporte*.
+
+Digite *menu* para voltar.`;
+          }
+
+          if (instrucao) {
+            await atualizarUsuario(from, { etapa: "menu" });
+            await enviarMensagem(from, instrucao);
             await enviarMensagem(SEU_NUMERO, `🎁 Novo teste solicitado\nNúmero: ${from}`);
-          } else {
-            await enviarMensagem(from, mensagemAparelho);
           }
 
           break;
 
         case "escolhendo_plano":
 
-          if (["1","2","3","4","5","6"].includes(message)) {
-            await atualizarEtapa(from, "menu");
-            await enviarMensagem(from, "✅ Plano selecionado!\nVou gerar seu pagamento agora.");
-            await enviarMensagem(SEU_NUMERO, `💰 Cliente escolheu plano ${message}\nNúmero: ${from}`);
-          } else {
+          const planos = {
+            "1": { nome: "1 mês", valor: 29.90 },
+            "2": { nome: "2 meses", valor: 49.90 },
+            "3": { nome: "3 meses", valor: 74.90 },
+            "4": { nome: "4 meses", valor: 99.90 },
+            "5": { nome: "6 meses", valor: 149.90 },
+            "6": { nome: "12 meses", valor: 249.90 }
+          };
+
+          if (planos[message]) {
+            await atualizarUsuario(from, {
+              etapa: "escolhendo_telas",
+              plano_temp: planos[message].nome,
+              valor_temp: planos[message].valor
+            });
+
+            await enviarMensagem(from, `📺 Quantos aparelhos deseja usar simultaneamente?
+
+1️⃣ 1 aparelho (valor base)
+2️⃣ 2 aparelhos (+ R$5)
+3️⃣ 3 aparelhos (+ R$10)
+4️⃣ 4 aparelhos (+ R$15)
+
+Digite *menu* para voltar.`);
+          }
+
+          break;
+
+        case "escolhendo_telas":
+
+          const telas = parseInt(message);
+
+          if (telas >= 1 && telas <= 4) {
+
+            const adicionais = (telas - 1) * 5;
+            const valorFinal = user.valor_temp + adicionais;
+
+            await atualizarUsuario(from, {
+              etapa: "confirmando_pagamento",
+              telas_temp: telas,
+              valor_final_temp: valorFinal
+            });
+
+            await enviarMensagem(from, `✅ Resumo:
+
+📅 Plano: ${user.plano_temp}
+📺 Aparelhos: ${telas}
+
+💰 Valor total: R$ ${valorFinal.toFixed(2)}
+
+1️⃣ Confirmar
+2️⃣ Escolher outro plano
+
+Digite *menu* para voltar.`);
+          }
+
+          break;
+
+        case "confirmando_pagamento":
+
+          if (message === "1") {
+            await enviarMensagem(from, "✅ Vou gerar seu pagamento agora.");
+            await enviarMensagem(SEU_NUMERO, `💰 Confirmado
+Número: ${from}
+Plano: ${user.plano_temp}
+Telas: ${user.telas_temp}
+Valor: R$ ${user.valor_final_temp}`);
+            await atualizarUsuario(from, { etapa: "menu" });
+          }
+
+          else if (message === "2") {
+            await atualizarUsuario(from, { etapa: "escolhendo_plano" });
             await enviarMensagem(from, mensagemPlanos);
           }
 
           break;
 
         default:
-          await atualizarEtapa(from, "menu");
+          await atualizarUsuario(from, { etapa: "menu" });
           await enviarMensagem(from, mensagemMenu);
       }
     }
@@ -203,22 +309,11 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
 
   } catch (error) {
-    console.error("Erro WhatsApp:", error);
+    console.error(error);
     res.sendStatus(200);
   }
 });
 
-// ================= FUNÇÃO ENVIAR =================
-
-async function enviarMensagem(to, body) {
-  await axios.get(
-    `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
-    {
-      params: { token: TOKEN, to, body }
-    }
-  );
-}
-
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log("ATLAS Bot rodando ✅");
 });
