@@ -628,7 +628,7 @@ Total ativos: ${novasAtivas}
 Liberar 1 mês bônus manual.`);
         }
 
-        if (novasAtivas > 10) {
+              if (novasAtivas > 10) {
 
           await enviarMensagem(SEU_NUMERO, `💰 Nova indicação ativa
 
@@ -637,7 +637,8 @@ Total ativos: ${novasAtivas}
 
 Adicionar R$10 comissão.`);
         }
-      }
+      }  // ✅ fecha if (!jaExiste)
+    }    // ✅ ADICIONE ESTA LINHA - fecha if (comprador.indicador_id)
 
       await enviarMensagem(phone, `✅ Pagamento confirmado!
 
