@@ -185,41 +185,74 @@ Digite *menu* para voltar.`);
 
           break;
 
-        case "escolhendo_aparelho":
+   case "escolhendo_aparelho":
 
-          let instrucao = "";
+  let instrucao = "";
 
-          if (message === "1") {
-            instrucao = `📺 Instale o app *Fun Play* na loja da sua TV.
+  if (message === "1") {
+    instrucao = `✅ Vamos configurar seu teste (3 horas).
 
-Se não encontrar ou tiver dificuldade digite *suporte*.
+📺 Instalação na TV:
 
-Digite *menu* para voltar.`;
-          }
+Baixe o aplicativo:
+✅ Fun Play
 
-          else if (message === "2") {
-            instrucao = `📱 Instale o app *Blessed Player* na Play Store ou App Store.
+Passo a passo:
+1️⃣ Abra a loja da sua TV  
+2️⃣ Procure por: Fun Play  
+3️⃣ Instale  
+4️⃣ Abra o app e me avise ✅  
 
-Se tiver dificuldade digite *suporte*.
-
-Digite *menu* para voltar.`;
-          }
-
-          else if (message === "3") {
-            instrucao = `💻 Acesse o Web Player no navegador.
-
-Se tiver dificuldade digite *suporte*.
+⚠️ Caso não encontre o aplicativo ou tenha dificuldade, digite *suporte* que eu te ajudo.
 
 Digite *menu* para voltar.`;
-          }
+  }
 
-          if (instrucao) {
-            await atualizarUsuario(from, { etapa: "menu" });
-            await enviarMensagem(from, instrucao);
-            await enviarMensagem(SEU_NUMERO, `🎁 Novo teste solicitado\nNúmero: ${from}`);
-          }
+  else if (message === "2") {
+    instrucao = `✅ Vamos configurar seu teste (3 horas).
 
-          break;
+📱 Instalação no celular:
+
+Baixe o aplicativo:
+✅ Blessed Player
+
+Disponível na Play Store ou App Store.
+
+1️⃣ Abra a loja  
+2️⃣ Procure por: Blessed Player  
+3️⃣ Instale  
+4️⃣ Abra e me avise ✅  
+
+⚠️ Se não encontrar ou tiver dificuldade, digite *suporte*.
+
+Digite *menu* para voltar.`;
+  }
+
+  else if (message === "3") {
+    instrucao = `✅ Vamos configurar seu teste (3 horas).
+
+💻 Instalação no Notebook ou Computador:
+
+Use o:
+✅ Web Player Atlas
+
+Acesse pelo navegador:
+🔗 (COLOQUE AQUI O LINK)
+
+Abra o site e me avise ✅  
+
+⚠️ Se tiver dificuldade para acessar, digite *suporte*.
+
+Digite *menu* para voltar.`;
+  }
+
+  if (instrucao) {
+    await atualizarUsuario(from, { etapa: "menu" });
+    await enviarMensagem(from, instrucao);
+    await enviarMensagem(SEU_NUMERO, `🎁 Novo teste solicitado\nNúmero: ${from}`);
+  }
+
+  break;
 
         case "escolhendo_plano":
 
