@@ -319,7 +319,7 @@ case "confirmando_pagamento":
 
     await enviarMensagem(from, "🔄 Gerando seu pagamento PIX...");
 
-  const payment = await axios.post(
+const payment = await axios.post(
   "https://api.mercadopago.com/v1/payments",
   {
     transaction_amount: user.valor_final_temp,
@@ -338,7 +338,6 @@ case "confirmando_pagamento":
     }
   }
 );
-      },
       {
         headers: {
           Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`
