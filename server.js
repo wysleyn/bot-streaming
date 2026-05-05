@@ -186,7 +186,17 @@ Digite *menu* para voltar.`);
           break;
 
    case "escolhendo_aparelho":
+if (user.ja_testou) {
+  await enviarMensagem(from, `⚠️ Você já utilizou seu teste gratuito.
 
+Escolha um plano para continuar:
+
+1️⃣ Ver planos
+2️⃣ Falar com suporte
+
+Digite *menu* para voltar.`);
+  break;
+}
   let instrucao = "";
 
   if (message === "1") {
@@ -251,11 +261,12 @@ Digite *menu* para voltar.`;
   const agora = new Date();
   const fim = new Date(agora.getTime() + 3 * 60 * 60 * 1000); // 3 horas
 
-  await atualizarUsuario(from, {
-    etapa: "teste_ativo",
-    teste_inicio: agora,
-    teste_fim: fim
-  });
+await atualizarUsuario(from, {
+  etapa: "teste_ativo",
+  teste_inicio: agora,
+  teste_fim: fim,
+  ja_testou: true
+});
 
   await enviarMensagem(from, instrucao);
   await enviarMensagem(SEU_NUMERO, `🎁 Novo teste iniciado\nNúmero: ${from}`);
@@ -440,6 +451,45 @@ app.post("/mercadopago", async (req, res) => {
       const valor = payment.data.transaction_amount;
       const phone = payment.data.payer.email.replace("@atlas.com", "");
 
+      // ✅ DEFINIR DATA DE FIM DO PLANO
+  const { data: user } = await supabase
+  .from("users")
+  .select("*")
+  .eq("phone", phone)
+  .single();
+
+let meses = 1;
+
+switch (user.plano_temp) {
+  case "1 mês":
+    meses = 1;
+    break;
+  case "2 meses":
+    meses = 2;
+    break;
+  case "3 meses":
+    meses = 3;
+    break;
+  case "4 meses":
+    meses = 4;
+    break;
+  case "6 meses":
+    meses = 6;
+    break;
+  case "12 meses":
+    meses = 12;
+    break;
+  default:
+    meses = 1;
+}
+
+const fimPlano = new Date();
+fimPlano.setMonth(fimPlano.getMonth() + meses);
+
+      await atualizarUsuario(phone, {
+        plano_fim: fimPlano
+      });
+
       await enviarMensagem(phone, `✅ Pagamento confirmado!
 
 Seu plano foi ativado com sucesso ✅
@@ -463,6 +513,38 @@ Liberar login.`);
     res.sendStatus(200);
   }
 });
+// ✅ VERIFICADOR DE VENCIMENTO (3 DIAS ANTES)
+
+setInterval(async () => {
+
+  const agora = new Date();
+  const tresDiasAntes = new Date(agora.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  const { data: usuarios } = await supabase
+    .from("users")
+    .select("*")
+    .not("plano_fim", "is", null);
+
+  if (!usuarios) return;
+
+  for (let user of usuarios) {
+
+    if (!user.plano_fim) continue;
+
+    const fimPlano = new Date(user.plano_fim);
+    const diferenca = fimPlano - tresDiasAntes;
+
+    if (diferenca > 0 && diferenca < 24 * 60 * 60 * 1000) {
+
+      await enviarMensagem(user.phone, `📅 Seu plano ATLAS vence em 3 dias.
+
+Evite interrupções e renove antecipadamente ✅
+
+Digite *menu* para renovar.`);
+    }
+  }
+
+}, 12 * 60 * 60 * 1000); // verifica a cada 12h
 app.listen(PORT, () => {
   console.log("ATLAS Bot rodando ✅");
 });
