@@ -378,6 +378,11 @@ const payment = await axios.post(
   }
 );
 
+// ✅ salvar payment_id DEPOIS que gerou o PIX
+await atualizarUsuario(from, {
+  payment_id: payment.data.id
+});
+
    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
 const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
 
@@ -433,7 +438,8 @@ app.post("/mercadopago", async (req, res) => {
 
   try {
 
-    if (req.body.type !== "payment") return res.sendStatus(200);
+   if (req.body.type !== "payment") return res.sendStatus(200);
+if (!req.body.data || !req.body.data.id) return res.sendStatus(200);
 
     const paymentId = req.body.data.id;
 
@@ -451,52 +457,93 @@ app.post("/mercadopago", async (req, res) => {
       const valor = payment.data.transaction_amount;
       const phone = payment.data.payer.email.replace("@atlas.com", "");
 
-      // ✅ DEFINIR DATA DE FIM DO PLANO
-  const { data: user } = await supabase
-  .from("users")
-  .select("*")
-  .eq("phone", phone)
-  .single();
+      // ✅ Buscar comprador
+      const { data: comprador } = await supabase
+        .from("users")
+        .select("*")
+        .eq("phone", phone)
+        .single();
 
-let meses = 1;
+      // ✅ Calcular duração do plano
+      let meses = 1;
 
-switch (user.plano_temp) {
-  case "1 mês":
-    meses = 1;
-    break;
-  case "2 meses":
-    meses = 2;
-    break;
-  case "3 meses":
-    meses = 3;
-    break;
-  case "4 meses":
-    meses = 4;
-    break;
-  case "6 meses":
-    meses = 6;
-    break;
-  case "12 meses":
-    meses = 12;
-    break;
-  default:
-    meses = 1;
-}
+      switch (comprador.plano_temp) {
+        case "1 mês": meses = 1; break;
+        case "2 meses": meses = 2; break;
+        case "3 meses": meses = 3; break;
+        case "4 meses": meses = 4; break;
+        case "6 meses": meses = 6; break;
+        case "12 meses": meses = 12; break;
+        default: meses = 1;
+      }
 
-const fimPlano = new Date();
-fimPlano.setMonth(fimPlano.getMonth() + meses);
+      const fimPlano = new Date();
+      fimPlano.setMonth(fimPlano.getMonth() + meses);
 
       await atualizarUsuario(phone, {
-        plano_fim: fimPlano
+        plano_fim: fimPlano,
+        etapa: "menu"
       });
+
+      // ✅ SISTEMA DE INDICAÇÃO
+   if (comprador.indicador_id) {
+
+  const { data: jaExiste } = await supabase
+    .from("indicacoes")
+    .select("*")
+    .eq("indicado_id", comprador.id)
+    .maybeSingle();
+
+  if (!jaExiste) {
+
+    await supabase
+      .from("indicacoes")
+      .insert([
+        {
+          indicador_id: comprador.indicador_id,
+          indicado_id: comprador.id,
+          status: "ativo"
+        }
+      ]);
+        const { data: indicador } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", comprador.indicador_id)
+          .single();
+
+        const novasAtivas = (indicador.indicacoes_ativas || 0) + 1;
+
+        await supabase
+          .from("users")
+          .update({ indicacoes_ativas: novasAtivas })
+          .eq("id", indicador.id);
+
+        if (novasAtivas <= 10 && novasAtivas % 2 === 0) {
+
+          await enviarMensagem(SEU_NUMERO, `🎁 META ATINGIDA
+
+Indicador: ${indicador.phone}
+Total ativos: ${novasAtivas}
+
+Liberar 1 mês bônus manual.`);
+        }
+
+        if (novasAtivas > 10) {
+
+          await enviarMensagem(SEU_NUMERO, `💰 Nova indicação ativa
+
+Indicador: ${indicador.phone}
+Total ativos: ${novasAtivas}
+
+Adicionar R$10 comissão.`);
+        }
+      }
 
       await enviarMensagem(phone, `✅ Pagamento confirmado!
 
-Seu plano foi ativado com sucesso ✅
+Seu plano está sendo ativado agora 🚀
 
-Vou liberar seu acesso agora.
-
-Obrigado por escolher o ATLAS! 📡`);
+Em instantes avisaremos quando seu plano estiver ativo.`);
 
       await enviarMensagem(SEU_NUMERO, `💰 PAGAMENTO CONFIRMADO
 
