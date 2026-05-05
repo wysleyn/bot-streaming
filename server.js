@@ -246,11 +246,39 @@ Abra o site e me avise ✅
 Digite *menu* para voltar.`;
   }
 
-  if (instrucao) {
+ if (instrucao) {
+
+  const agora = new Date();
+  const fim = new Date(agora.getTime() + 3 * 60 * 60 * 1000); // 3 horas
+
+  await atualizarUsuario(from, {
+    etapa: "teste_ativo",
+    teste_inicio: agora,
+    teste_fim: fim
+  });
+
+  await enviarMensagem(from, instrucao);
+  await enviarMensagem(SEU_NUMERO, `🎁 Novo teste iniciado\nNúmero: ${from}`);
+
+  // ✅ AGENDAR FIM DO TESTE
+  setTimeout(async () => {
+
+    await enviarMensagem(from, `⏰ Seu teste do ATLAS foi encerrado.
+
+Agora que você já viu a qualidade e estabilidade ✅
+
+Escolha um plano para continuar:
+
+1️⃣ Ver planos  
+2️⃣ Falar com suporte  
+
+Digite a opção desejada 👇
+Digite *menu* para voltar.`);
+
     await atualizarUsuario(from, { etapa: "menu" });
-    await enviarMensagem(from, instrucao);
-    await enviarMensagem(SEU_NUMERO, `🎁 Novo teste solicitado\nNúmero: ${from}`);
-  }
+
+  }, 3 * 60 * 60 * 1000); // 3 horas
+}
 
   break;
 
