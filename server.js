@@ -34,6 +34,8 @@ const SEU_NUMERO = "5524999096129";
 const atendimentosHumanos = {};
 const pagamentosPendentes = {};
 
+// 🔒 MODO MANUTENÇÃO (false = não responde ninguém)
+const BOT_ATIVO = false;
 // ================= MENSAGENS =================
 
 const mensagemMenu = `📋 *Menu Principal – MasterPlay*
