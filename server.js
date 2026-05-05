@@ -313,25 +313,57 @@ Digite *menu* para voltar.`);
           }
 
           break;
+case "confirmando_pagamento":
 
-        case "confirmando_pagamento":
+  if (message === "1") {
 
-          if (message === "1") {
-            await enviarMensagem(from, "✅ Vou gerar seu pagamento agora.");
-            await enviarMensagem(SEU_NUMERO, `💰 Confirmado
-Número: ${from}
-Plano: ${user.plano_temp}
-Telas: ${user.telas_temp}
-Valor: R$ ${user.valor_final_temp}`);
-            await atualizarUsuario(from, { etapa: "menu" });
-          }
+    await enviarMensagem(from, "🔄 Gerando seu pagamento PIX...");
 
-          else if (message === "2") {
-            await atualizarUsuario(from, { etapa: "escolhendo_plano" });
-            await enviarMensagem(from, mensagemPlanos);
-          }
+    const payment = await axios.post(
+      "https://api.mercadopago.com/v1/payments",
+      {
+        transaction_amount: user.valor_final_temp,
+        description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
+        payment_method_id: "pix",
+        payer: {
+          email: `${from}@atlas.com`
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`
+        }
+      }
+    );
 
-          break;
+    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code;
+    const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
+
+    await atualizarUsuario(from, {
+      etapa: "aguardando_pagamento",
+      payment_id: payment.data.id
+    });
+
+    await enviarMensagem(from, `✅ PIX gerado com sucesso!
+
+💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
+
+📲 Copie e cole o código abaixo no seu app bancário:
+
+${pixCode}
+
+Assim que o pagamento for confirmado, seu acesso será liberado ✅
+
+Digite *menu* para voltar.`);
+
+  }
+
+  else if (message === "2") {
+    await atualizarUsuario(from, { etapa: "escolhendo_plano" });
+    await enviarMensagem(from, mensagemPlanos);
+  }
+
+  break;
 
         default:
           await atualizarUsuario(from, { etapa: "menu" });
@@ -346,7 +378,53 @@ Valor: R$ ${user.valor_final_temp}`);
     res.sendStatus(200);
   }
 });
+// ================= WEBHOOK MERCADO PAGO =================
 
+app.post("/mercadopago", async (req, res) => {
+
+  try {
+
+    if (req.body.type !== "payment") return res.sendStatus(200);
+
+    const paymentId = req.body.data.id;
+
+    const payment = await axios.get(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`
+        }
+      }
+    );
+
+    if (payment.data.status === "approved") {
+
+      const valor = payment.data.transaction_amount;
+      const phone = payment.data.payer.email.replace("@atlas.com", "");
+
+      await enviarMensagem(phone, `✅ Pagamento confirmado!
+
+Seu plano foi ativado com sucesso ✅
+
+Vou liberar seu acesso agora.
+
+Obrigado por escolher o ATLAS! 📡`);
+
+      await enviarMensagem(SEU_NUMERO, `💰 PAGAMENTO CONFIRMADO
+
+Número: ${phone}
+Valor: R$ ${valor}
+
+Liberar login.`);
+    }
+
+    res.sendStatus(200);
+
+  } catch (error) {
+    console.error("Erro Mercado Pago:", error.response?.data || error.message);
+    res.sendStatus(200);
+  }
+});
 app.listen(PORT, () => {
   console.log("ATLAS Bot rodando ✅");
 });
