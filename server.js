@@ -518,7 +518,9 @@ Copie o código da próxima mensagem ou escaneie o QR abaixo 👇`);
 
   break; 
 
-
+case "suporte":
+  // Bot fica totalmente silencioso
+  break;
         default:
           await atualizarUsuario(from, { etapa: "menu" });
           await enviarMensagem(from, mensagemMenu);
