@@ -325,9 +325,11 @@ case "confirmando_pagamento":
         transaction_amount: user.valor_final_temp,
         description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
         payment_method_id: "pix",
-        payer: {
-          email: `${from}@atlas.com`
-        }
+       payer: {
+  email: "cliente@atlas.com",
+  first_name: "Cliente",
+  last_name: "Atlas"
+}
       },
       {
         headers: {
