@@ -338,12 +338,6 @@ const payment = await axios.post(
     }
   }
 );
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`
-        }
-      }
-    );
 
     const pixCode = payment.data.point_of_interaction.transaction_data.qr_code;
     const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
