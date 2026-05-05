@@ -339,27 +339,23 @@ const payment = await axios.post(
   }
 );
 
-    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
-    const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
+   const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
+const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
 
-    await atualizarUsuario(from, {
-      etapa: "aguardando_pagamento",
-      payment_id: payment.data.id
-    });
-
+// Mensagem informativa
 await enviarMensagem(from, `✅ PIX gerado com sucesso!
 
 💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
 
-📲 Copie e cole exatamente como está abaixo:
+Você pode pagar de duas formas:
 
-\`\`\`
-${pixCode}
-\`\`\`
+1️⃣ Escaneando o QR Code abaixo  
+2️⃣ Copiando o código da próxima mensagem 👇`);
 
-⚠️ O código expira em 30 minutos.
+// Código sozinho (facilita copiar)
+await enviarMensagem(from, pixCode);
 
-Digite *menu* para voltar.`);
+// Enviar QR Code
 await axios.post(
   `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/image`,
   new URLSearchParams({
