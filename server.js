@@ -339,7 +339,7 @@ const payment = await axios.post(
   }
 );
 
-    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code;
+    const pixCode = payment.data.point_of_interaction.transaction_data.qr_code.trim();
     const pixBase64 = payment.data.point_of_interaction.transaction_data.qr_code_base64;
 
     await atualizarUsuario(from, {
@@ -347,15 +347,17 @@ const payment = await axios.post(
       payment_id: payment.data.id
     });
 
-    await enviarMensagem(from, `✅ PIX gerado com sucesso!
+await enviarMensagem(from, `✅ PIX gerado com sucesso!
 
 💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
 
-📲 Copie e cole o código abaixo no seu app bancário:
+📲 Copie e cole exatamente como está abaixo:
 
+\`\`\`
 ${pixCode}
+\`\`\`
 
-Assim que o pagamento for confirmado, seu acesso será liberado ✅
+⚠️ O código expira em 30 minutos.
 
 Digite *menu* para voltar.`);
 
