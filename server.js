@@ -14,20 +14,17 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// ================= CONFIGURAÇÕES =================
+// ================= CONFIG =================
 
 const TOKEN = "a2sgqtw8lehf0q3i";
 const INSTANCE_ID = "171812";
 const SEU_NUMERO = "5524999096129";
 
-// ✅ BOT ATIVO PARA TESTE
 const BOT_ATIVO = true;
 
-// ================= MENSAGENS ATLAS =================
+// ================= MENSAGENS =================
 
 const mensagemBoasVindas = `📡🔥 *ATLAS – Acesso Completo a TV e Streaming*
-
-Chega de pagar várias plataformas separadas.
 
 Com o ATLAS você tem:
 
@@ -38,9 +35,7 @@ Com o ATLAS você tem:
 🎌 Animes e doramas  
 👶 Infantil  
 
-✅ Funciona em TV, celular e computador
-
-Escolha uma opção 👇`;
+✅ Funciona em TV, celular e computador`;
 
 const mensagemMenu = `📋 *Menu ATLAS*
 
@@ -76,9 +71,7 @@ A cada 2 amigos ativos:
 🎁 Você ganha 1 mês grátis.
 
 Após 10 ativos:
-💵 Você ganha R$10 por cliente.
-
-Seu código será gerado automaticamente ✅`;
+💵 Você ganha R$10 por cliente.`;
 
 // ================= FUNÇÃO USUÁRIO =================
 
@@ -96,7 +89,7 @@ async function criarOuBuscarUsuario(phone) {
 
   const { data, error } = await supabase
     .from("users")
-    .insert([{ phone, cupom }])
+    .insert([{ phone, cupom, etapa: "menu" }])
     .select()
     .single();
 
@@ -108,13 +101,20 @@ async function criarOuBuscarUsuario(phone) {
   return data;
 }
 
+async function atualizarEtapa(phone, etapa) {
+  await supabase
+    .from("users")
+    .update({ etapa })
+    .eq("phone", phone);
+}
+
 // ================= STATUS =================
 
 app.get("/", (req, res) => {
   res.send("✅ ATLAS Bot Online!");
 });
 
-// ================= WEBHOOK WHATSAPP =================
+// ================= WEBHOOK =================
 
 app.post("/webhook", async (req, res) => {
   try {
@@ -125,69 +125,99 @@ app.post("/webhook", async (req, res) => {
       const from = body.data.from.replace("@c.us", "");
       const message = body.data.body?.trim().toLowerCase();
 
-      // ✅ sempre cria usuário
       const user = await criarOuBuscarUsuario(from);
       if (!user) return res.sendStatus(200);
 
-      // ✅ bloqueia respostas se desativado
       if (!BOT_ATIVO) return res.sendStatus(200);
 
-      let resposta = "";
-
-      if (message === "oi" || message === "menu") {
-        resposta = mensagemBoasVindas + "\n\n" + mensagemMenu;
+      // ✅ MENU UNIVERSAL
+      if (message === "menu") {
+        await atualizarEtapa(from, "menu");
+        await enviarMensagem(from, mensagemBoasVindas + "\n\n" + mensagemMenu);
+        return res.sendStatus(200);
       }
 
-      else if (message === "1") {
-        resposta = mensagemAparelho;
-      }
+      // ✅ FLUXO BASEADO NA ETAPA
+      switch (user.etapa) {
 
-      else if (message === "2") {
-        resposta = mensagemPlanos;
-      }
+        case "menu":
 
-      else if (message === "3") {
-        resposta = mensagemIndique;
-      }
-
-      else if (message === "4") {
-
-        resposta = "👨‍💻 Você está falando com o suporte. Aguarde atendimento ✅";
-
-        await axios.post(
-          `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
-          new URLSearchParams({
-            token: TOKEN,
-            to: SEU_NUMERO,
-            body: `📞 CLIENTE CHAMOU SUPORTE\nNúmero: ${from}`
-          }).toString(),
-          { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-        );
-      }
-
-      else {
-        resposta = "Digite *menu* para ver as opções.";
-      }
-
-      await axios.get(
-        `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
-        {
-          params: {
-            token: TOKEN,
-            to: from,
-            body: resposta
+          if (message === "1") {
+            await atualizarEtapa(from, "escolhendo_aparelho");
+            await enviarMensagem(from, mensagemAparelho);
           }
-        }
-      );
+
+          else if (message === "2") {
+            await atualizarEtapa(from, "escolhendo_plano");
+            await enviarMensagem(from, mensagemPlanos);
+          }
+
+          else if (message === "3") {
+            await enviarMensagem(from, mensagemIndique);
+          }
+
+          else if (message === "4") {
+            await atualizarEtapa(from, "suporte");
+
+            await enviarMensagem(from, "👨‍💻 Você está falando com o suporte. Aguarde atendimento ✅");
+
+            await enviarMensagem(SEU_NUMERO, `📞 Cliente chamou suporte\nNúmero: ${from}`);
+          }
+
+          else {
+            await enviarMensagem(from, mensagemMenu);
+          }
+
+          break;
+
+        case "escolhendo_aparelho":
+
+          if (["1","2","3"].includes(message)) {
+            await atualizarEtapa(from, "menu");
+            await enviarMensagem(from, "✅ Perfeito! Vou preparar seu teste.\nEm instantes envio seu login.");
+            await enviarMensagem(SEU_NUMERO, `🎁 Novo teste solicitado\nNúmero: ${from}`);
+          } else {
+            await enviarMensagem(from, mensagemAparelho);
+          }
+
+          break;
+
+        case "escolhendo_plano":
+
+          if (["1","2","3","4","5","6"].includes(message)) {
+            await atualizarEtapa(from, "menu");
+            await enviarMensagem(from, "✅ Plano selecionado!\nVou gerar seu pagamento agora.");
+            await enviarMensagem(SEU_NUMERO, `💰 Cliente escolheu plano ${message}\nNúmero: ${from}`);
+          } else {
+            await enviarMensagem(from, mensagemPlanos);
+          }
+
+          break;
+
+        default:
+          await atualizarEtapa(from, "menu");
+          await enviarMensagem(from, mensagemMenu);
+      }
     }
 
     res.sendStatus(200);
 
   } catch (error) {
-    console.error("Erro WhatsApp:", error.response?.data || error.message);
+    console.error("Erro WhatsApp:", error);
     res.sendStatus(200);
   }
 });
+
+// ================= FUNÇÃO ENVIAR =================
+
+async function enviarMensagem(to, body) {
+  await axios.get(
+    `https://api.ultramsg.com/instance${INSTANCE_ID}/messages/chat`,
+    {
+      params: { token: TOKEN, to, body }
+    }
+  );
+}
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
