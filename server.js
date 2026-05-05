@@ -184,7 +184,41 @@ Não. Você pode instalar novamente no novo aparelho.
 2️⃣ Ver conteúdos  
 3️⃣ Garantir acesso agora  
 4️⃣ Falar com suporte`;
+// ================= FUNÇÕES SUPABASE =================
 
+async function criarOuBuscarUsuario(phone) {
+
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('*')
+    .eq('phone', phone)
+    .maybeSingle();
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const ultimos4 = phone.slice(-4);
+  const cupom = `ATLAS${ultimos4}`;
+
+  const { data: newUser, error } = await supabase
+    .from('users')
+    .insert([
+      {
+        phone,
+        cupom
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Erro ao criar usuário:", error);
+    return null;
+  }
+
+  return newUser;
+}
 // ================= STATUS =================
 
 app.get("/", (req, res) => {
@@ -222,8 +256,14 @@ app.post("/webhook", async (req, res) => {
     }
     if (body.event_type === "message_received" && body.data) {
 
-      const from = body.data.from.replace("@c.us", "");
-      const message = body.data.body?.trim().toLowerCase();
+     const from = body.data.from.replace("@c.us", "");
+const message = body.data.body?.trim().toLowerCase();
+
+const user = await criarOuBuscarUsuario(from);
+
+if (!user) {
+  return res.sendStatus(200);
+}
 
       // Ativa atendimento humano se você responder
       if (body.data.fromMe === true) {
