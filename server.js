@@ -216,7 +216,10 @@ app.get("/apk", async (req, res) => {
 app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
-
+    
+    if (!BOT_ATIVO) {
+      return res.sendStatus(200);
+    }
     if (body.event_type === "message_received" && body.data) {
 
       const from = body.data.from.replace("@c.us", "");
