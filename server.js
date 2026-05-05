@@ -319,17 +319,25 @@ case "confirmando_pagamento":
 
     await enviarMensagem(from, "🔄 Gerando seu pagamento PIX...");
 
-    const payment = await axios.post(
-      "https://api.mercadopago.com/v1/payments",
-      {
-        transaction_amount: user.valor_final_temp,
-        description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
-        payment_method_id: "pix",
-       payer: {
-  email: "cliente@atlas.com",
-  first_name: "Cliente",
-  last_name: "Atlas"
-}
+  const payment = await axios.post(
+  "https://api.mercadopago.com/v1/payments",
+  {
+    transaction_amount: user.valor_final_temp,
+    description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
+    payment_method_id: "pix",
+    payer: {
+      email: "cliente@atlas.com",
+      first_name: "Cliente",
+      last_name: "Atlas"
+    }
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+      "X-Idempotency-Key": `pix-${Date.now()}-${from}`
+    }
+  }
+);
       },
       {
         headers: {
