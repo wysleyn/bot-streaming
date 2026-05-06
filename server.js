@@ -811,10 +811,8 @@ setInterval(async () => {
 
   if (!usuarios) return;
 
-  for (let user of usuarios) {
-
-    if (!usuarioAtual.plano_fim) continue;
-
+    for (let user of usuarios) {
+    if (!user.plano_fim) continue; // Use 'user' em vez de 'usuarioAtual'
     const fimPlano = new Date(user.plano_fim);
     const diferenca = fimPlano - tresDiasAntes;
 
