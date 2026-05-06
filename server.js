@@ -474,10 +474,11 @@ Você pode pagar de duas formas:
     );
   }
 
-  else if (message === "2") {
-    await atualizarUsuario(from, { etapa: "escolhendo_plano" });
-    await enviarMensagem(from, mensagemPlanos);
-  }
+ else if (message === "2") {
+  await atualizarUsuario(from, { etapa: "escolhendo_plano" });
+  await enviarMensagem(from, mensagemPlanos);
+  return res.sendStatus(200);
+}
 
   break;
 
