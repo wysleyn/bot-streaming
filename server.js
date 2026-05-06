@@ -23,19 +23,32 @@ const SEU_NUMERO = "5524999096129";
 const BOT_ATIVO = true;
 
 // ================= MENSAGENS =================
+const mensagemBoasVindas = `🚀 *BEM-VINDO À EXPERIÊNCIA ATLAS!* 🚀
 
-const mensagemMenu = `📋 *Menu ATLAS*
+Prepare-se para o melhor do entretenimento digital. Chega de pagar caro por planos limitados e sofrer com travamentos na hora do seu lazer! 📺✨
 
-+ de 1.000 clientes já utilizam ✅
+✅ *O QUE VOCÊ TERÁ ACESSO:*
 
-1️⃣ Teste grátis  
-2️⃣ Ver planos  
-3️⃣ Perguntas frequentes  
-4️⃣ Indique e ganhe  
-5️⃣ Já sou cliente  
-6️⃣ Suporte  
+⚽ *ESPORTES AO VIVO:* Todos os jogos do seu time! Premiere, ESPN, Combate, DAZN e muito mais. Não perca nenhum lance!
+📺 *CANAIS AO VIVO:* Grade completa de canais abertos e fechados, todos em Full HD e 4K.
+🍿 *CINEMA EM CASA:* Filmes que acabaram de sair do cinema e as séries mais comentadas do momento (Netflix, Disney+, HBO).
+🌟 + de 1.000 clientes satisfeitos e estabilidade 99.9%.
 
-Digite a opção 👇
+🎁 *QUE TAL UM TESTE GRÁTIS?*
+Liberei **3 horas de acesso total** para você sentir a qualidade agora mesmo!
+
+👇 *Escolha uma opção abaixo:*`;
+
+const mensagemMenu = `📋 *Menu Principal ATLAS*
+
+1️⃣ Teste grátis (3 horas) 🎁
+2️⃣ Ver planos e preços 🔥
+3️⃣ Perguntas frequentes ❓
+4️⃣ Indique e ganhe 💰
+5️⃣ Já sou cliente 👤
+6️⃣ Falar com suporte 👨‍💻
+
+Digite o número da opção desejada 👇
 Digite *menu* para voltar.`;
 
 const mensagemFAQ = `❓ *Perguntas Frequentes*
@@ -99,7 +112,7 @@ async function criarOuBuscarUsuario(phone) {
 
   const { data } = await supabase
     .from("users")
-    .insert([{ phone, cupom, etapa: "menu" }])
+    .insert([{ phone, cupom, etapa: "inicio" }]) // ✅ Novo cliente começa em "inicio"
     .select()
     .single();
 
@@ -123,40 +136,61 @@ app.post("/webhook", async (req, res) => {
   try {
     const body = req.body;
 
+    // Verifica se o evento é uma mensagem recebida
     if (body.event_type === "message_received" && body.data) {
+      
+      // ✅ 1. DETECÇÃO DE INTERVENÇÃO HUMANA (Resposta manual)
+      if (body.data.from_me === true) {
+        const clientePhone = body.data.to.replace("@c.us", "");
+        
+        // Se você mandar mensagem e não for o comando "menu", o bot entra em suporte
+        if (body.data.body?.toLowerCase() !== "menu") {
+          await atualizarUsuario(clientePhone, { etapa: "suporte" });
+          console.log(`[SUPORTE] Bot pausado para ${clientePhone} devido a resposta manual.`);
+          return res.sendStatus(200);
+        }
+      }
 
+      // ✅ 2. DADOS DA MENSAGEM DO CLIENTE
       const from = body.data.from.replace("@c.us", "");
       const message = body.data.body?.trim().toLowerCase();
 
-     // ✅ Garante que o usuário exista
-await criarOuBuscarUsuario(from);
+      // ✅ 3. GARANTE QUE O USUÁRIO EXISTA NO BANCO
+      await criarOuBuscarUsuario(from);
 
-// ✅ Sempre pega usuário atualizado
-let { data: user } = await supabase
-  .from("users")
-  .select("*")
-  .eq("phone", from)
-  .single();
+      // ✅ 4. PEGA OS DADOS ATUALIZADOS DO USUÁRIO
+      let { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("phone", from)
+        .single();
 
-if (!user) return res.sendStatus(200);
-if (!BOT_ATIVO) return res.sendStatus(200);
+      if (!user) return res.sendStatus(200);
+      if (!BOT_ATIVO) return res.sendStatus(200);
 
-      // MENU UNIVERSAL
+      // ✅ 5. MENU UNIVERSAL (Se o cliente digitar menu, o bot acorda)
       if (message === "menu") {
         await atualizarUsuario(from, { etapa: "menu" });
         await enviarMensagem(from, mensagemMenu);
         return res.sendStatus(200);
       }
 
-     // ✅ Buscar etapa atual novamente antes do switch
-const { data: usuarioAtual } = await supabase
-  .from("users")
-  .select("*")
-  .eq("phone", from)
-  .single();
+      // ✅ 6. BUSCAR ETAPA ATUAL ANTES DO SWITCH
+      const { data: usuarioAtual } = await supabase
+        .from("users")
+        .select("*")
+        .eq("phone", from)
+        .single();
 
-switch (usuarioAtual.etapa) {
-
+      switch (usuarioAtual.etapa) {
+        // ... aqui continua o seu switch case normalmente
+case "inicio":
+  await enviarMensagem(from, mensagemBoasVindas);
+  setTimeout(async () => {
+    await enviarMensagem(from, mensagemMenu);
+  }, 1000); // 1 segundo de intervalo entre as mensagens
+  await atualizarUsuario(from, { etapa: "menu" });
+  return res.sendStatus(200);
 case "menu":
 
   if (message === "1") {
