@@ -392,7 +392,7 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       break;
 
 // ... aqui continua o case "validando_cupom"
-      case "validando_cupom":
+        case "validando_cupom":
       const { data: usuarioCupom } = await supabase
         .from("users")
         .select("*")
@@ -414,35 +414,44 @@ Digite menu para voltar.`);
         break;
       }
 
-      // ✅ MUDANÇA AQUI: Usando .ilike para ignorar maiúsculas/minúsculas
-      const { data: indicador, error: erroCupom } = await supabase
+      // Prepara o cupom: remove espaços e coloca em MAIÚSCULO (padrão ATLASxxxx)
+      const cupomLimpo = message.trim().toUpperCase();
+      console.log(`[LOG] Usuário ${from} tentou o cupom: [${cupomLimpo}]`);
+
+      // Busca exata pelo cupom
+      const { data: indicador, error: erroBusca } = await supabase
         .from("users")
         .select("*")
-        .ilike("cupom", message.trim()) 
+        .eq("cupom", cupomLimpo) // busca exata
         .maybeSingle();
 
-      // Log para você ver no terminal o que o bot está encontrando:
-      console.log(`Buscando cupom: ${message} | Encontrado:`, indicador);
+      if (erroBusca) {
+        console.error("[ERRO SUPABASE]:", erroBusca.message);
+      }
 
       if (!indicador) {
-        await enviarMensagem(from, "❌ Cupom inválido ou expirado. Digite novamente ou digite *0* para continuar sem cupom.");
+        console.log(`[LOG] Cupom ${cupomLimpo} não foi encontrado no banco.`);
+        await enviarMensagem(from, "❌ Cupom inválido. Verifique se digitou corretamente ou envie *0* para continuar sem desconto.");
         break;
       }
 
-      // Impede que o usuário use o próprio cupom (opcional, mas recomendado)
+      console.log(`[LOG] Cupom encontrado! Pertence ao número: ${indicador.phone}`);
+
+      // Evita usar o próprio cupom
       if (indicador.phone === from) {
-        await enviarMensagem(from, "⚠️ Você não pode usar seu próprio cupom de indicação.");
+        await enviarMensagem(from, "⚠️ Você não pode usar seu próprio cupom.");
         break;
       }
 
-      let novoValor = usuarioCupom.valor_final_temp;
+      // Cálculo do desconto
+      let valorComDesconto = usuarioCupom.valor_final_temp;
       if (usuarioCupom.plano_temp === "1 mês") {
-        novoValor = usuarioCupom.valor_final_temp - 5;
+        valorComDesconto = usuarioCupom.valor_final_temp - 5;
       }
 
       await atualizarUsuario(from, {
         indicador_id: indicador.id,
-        valor_final_temp: novoValor,
+        valor_final_temp: valorComDesconto,
         etapa: "confirmando_pagamento"
       });
 
@@ -451,7 +460,7 @@ Digite menu para voltar.`);
 📅 Plano: ${usuarioCupom.plano_temp}
 📺 Aparelhos: ${usuarioCupom.telas_temp}
 
-💰 Novo valor: R$ ${novoValor.toFixed(2)}
+💰 Novo valor: R$ ${valorComDesconto.toFixed(2)}
 
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
