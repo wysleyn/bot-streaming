@@ -150,11 +150,11 @@ app.post("/webhook", async (req, res) => {
 
       switch (user.etapa) {
 
-        case "menu":
+case "menu":
 
-          if (message === "1") {
-            await atualizarUsuario(from, { etapa: "escolhendo_aparelho" });
-            await enviarMensagem(from, `✅ Teste gratuito (3 horas)
+  if (message === "1") {
+    await atualizarUsuario(from, { etapa: "escolhendo_aparelho" });
+    await enviarMensagem(from, `✅ Teste gratuito (3 horas)
 
 Escolha o aparelho:
 
@@ -163,20 +163,23 @@ Escolha o aparelho:
 3️⃣ Notebook
 
 Digite *menu* para voltar.`);
-          }
+    return res.sendStatus(200);
+  }
 
-          else if (message === "2") {
-            await atualizarUsuario(from, { etapa: "escolhendo_plano" });
-            await enviarMensagem(from, mensagemPlanos);
-          }
+  else if (message === "2") {
+    await atualizarUsuario(from, { etapa: "escolhendo_plano" });
+    await enviarMensagem(from, mensagemPlanos);
+    return res.sendStatus(200);
+  }
 
-          else if (message === "3") {
-            await enviarMensagem(from, mensagemFAQ);
-          }
+  else if (message === "3") {
+    await enviarMensagem(from, mensagemFAQ);
+    return res.sendStatus(200);
+  }
 
-       else if (message === "4") {
-  await atualizarUsuario(from, { etapa: "indique_confirmar" });
-  await enviarMensagem(from, `💰 *Indique e Ganhe – ATLAS*
+  else if (message === "4") {
+    await atualizarUsuario(from, { etapa: "indique_confirmar" });
+    await enviarMensagem(from, `💰 *Indique e Ganhe – ATLAS*
 
 A cada 2 amigos ativos:
 🎁 Você ganha 1 mês grátis.
@@ -191,22 +194,26 @@ Deseja participar?
 
 Digite a opção 👇
 Digite *menu* para voltar.`);
-}
+    return res.sendStatus(200);
+  }
 
-         else if (message === "5") {
-  await atualizarUsuario(from, { etapa: "area_cliente" });
-  await enviarMensagem(from, mensagemJaCliente);
-}
+  else if (message === "5") {
+    await atualizarUsuario(from, { etapa: "area_cliente" });
+    await enviarMensagem(from, mensagemJaCliente);
+    return res.sendStatus(200);
+  }
 
-          else if (message === "6" || message === "suporte") {
-            await atualizarUsuario(from, { etapa: "suporte" });
-            await enviarMensagem(from, "👨‍💻 Descreva sua dúvida que vou te ajudar ✅");
-            await enviarMensagem(SEU_NUMERO, `📞 Cliente chamou suporte\nNúmero: ${from}`);
-          }
+  else if (message === "6" || message === "suporte") {
+    await atualizarUsuario(from, { etapa: "suporte" });
+    await enviarMensagem(from, "👨‍💻 Descreva sua dúvida que vou te ajudar ✅");
+    await enviarMensagem(SEU_NUMERO, `📞 Cliente chamou suporte\nNúmero: ${from}`);
+    return res.sendStatus(200);
+  }
 
-          else {
-            await enviarMensagem(from, mensagemMenu);
-          }
+  else {
+    await enviarMensagem(from, mensagemMenu);
+    return res.sendStatus(200);
+  }
 
           break;
 
