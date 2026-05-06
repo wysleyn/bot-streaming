@@ -392,7 +392,7 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       break;
 
 // ... aqui continua o case "validando_cupom"
-    case "validando_cupom":
+      case "validando_cupom":
       const { data: usuarioCupom } = await supabase
         .from("users")
         .select("*")
@@ -400,11 +400,7 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
         .single();
 
       if (message === "0") {
-        // ✅ ATUALIZA A ETAPA PARA O PRÓXIMO PASSO
-        await atualizarUsuario(from, {
-          etapa: "confirmando_pagamento"
-        });
-
+        await atualizarUsuario(from, { etapa: "confirmando_pagamento" });
         await enviarMensagem(from, `✅ Resumo:
 📅 Plano: ${usuarioCupom.plano_temp}
 📺 Aparelhos: ${usuarioCupom.telas_temp} ${usuarioCupom.telas_temp > 1 ? 'aparelhos' : 'aparelho'}
@@ -418,14 +414,24 @@ Digite menu para voltar.`);
         break;
       }
 
-      const { data: indicador } = await supabase
+      // ✅ MUDANÇA AQUI: Usando .ilike para ignorar maiúsculas/minúsculas
+      const { data: indicador, error: erroCupom } = await supabase
         .from("users")
         .select("*")
-        .eq("cupom", message.toUpperCase())
+        .ilike("cupom", message.trim()) 
         .maybeSingle();
 
+      // Log para você ver no terminal o que o bot está encontrando:
+      console.log(`Buscando cupom: ${message} | Encontrado:`, indicador);
+
       if (!indicador) {
-        await enviarMensagem(from, "❌ Cupom inválido. Digite novamente ou 0 para pular.");
+        await enviarMensagem(from, "❌ Cupom inválido ou expirado. Digite novamente ou digite *0* para continuar sem cupom.");
+        break;
+      }
+
+      // Impede que o usuário use o próprio cupom (opcional, mas recomendado)
+      if (indicador.phone === from) {
+        await enviarMensagem(from, "⚠️ Você não pode usar seu próprio cupom de indicação.");
         break;
       }
 
@@ -440,7 +446,7 @@ Digite menu para voltar.`);
         etapa: "confirmando_pagamento"
       });
 
-      await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
+      await enviarMensagem(from, `✅ Cupom *${indicador.cupom}* aplicado!
 
 📅 Plano: ${usuarioCupom.plano_temp}
 📺 Aparelhos: ${usuarioCupom.telas_temp}
@@ -450,7 +456,7 @@ Digite menu para voltar.`);
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
 
-Digite menu para voltar.`);
+Digite *menu* para voltar.`);
       break;
   break;       
 case "confirmando_pagamento":
