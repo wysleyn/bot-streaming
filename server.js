@@ -148,7 +148,14 @@ app.post("/webhook", async (req, res) => {
         return res.sendStatus(200);
       }
 
-      switch (user.etapa) {
+     // ✅ Buscar etapa atual novamente antes do switch
+const { data: usuarioAtual } = await supabase
+  .from("users")
+  .select("*")
+  .eq("phone", from)
+  .single();
+
+switch (usuarioAtual.etapa) {
 
 case "menu":
 
