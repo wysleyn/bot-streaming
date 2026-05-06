@@ -361,7 +361,37 @@ Digite *menu* para voltar.`);
           }
 
           break;
+// ... dentro do switch (usuarioAtual.etapa)
 
+    case "escolhendo_telas":
+      const opcoesTelas = {
+        "1": { nome: "1 aparelho", extra: 0 },
+        "2": { nome: "2 aparelhos", extra: 5 },
+        "3": { nome: "3 aparelhos", extra: 10 },
+        "4": { nome: "4 aparelhos", extra: 15 }
+      };
+
+      if (opcoesTelas[message]) {
+        const extra = opcoesTelas[message].extra;
+        const valorBase = usuarioAtual.valor_temp || 0;
+        const valorFinal = valorBase + extra;
+
+        await atualizarUsuario(from, {
+          etapa: "validando_cupom",
+          telas_temp: opcoesTelas[message].nome,
+          valor_final_temp: valorFinal
+        });
+
+        await enviarMensagem(from, `✅ Ótima escolha!
+
+Você tem algum cupom de desconto?
+Digite o código do cupom ou digite *0* para continuar sem cupom.`);
+      } else {
+        await enviarMensagem(from, "⚠️ Opção inválida. Escolha de 1 a 4 ou digite menu.");
+      }
+      break;
+
+// ... aqui continua o case "validando_cupom"
 case "validando_cupom":
 
   const { data: usuarioCupom } = await supabase
