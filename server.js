@@ -225,7 +225,7 @@ Digite *menu* para voltar.`);
           break;
 
    case "escolhendo_aparelho":
-if (user.ja_testou) {
+if (usuarioAtual.ja_testou) {
   await enviarMensagem(from, `⚠️ Você já utilizou seu teste gratuito.
 
 Escolha um plano para continuar:
@@ -788,7 +788,7 @@ setInterval(async () => {
 
   for (let user of usuarios) {
 
-    if (!user.plano_fim) continue;
+    if (!usuarioAtual.plano_fim) continue;
 
     const fimPlano = new Date(user.plano_fim);
     const diferenca = fimPlano - tresDiasAntes;
