@@ -165,9 +165,24 @@ Digite *menu* para voltar.`);
             await enviarMensagem(from, mensagemFAQ);
           }
 
-          else if (message === "4") {
-            await enviarMensagem(from, mensagemIndique);
-          }
+       else if (message === "4") {
+  await atualizarUsuario(from, { etapa: "indique_confirmar" });
+  await enviarMensagem(from, `💰 *Indique e Ganhe – ATLAS*
+
+A cada 2 amigos ativos:
+🎁 Você ganha 1 mês grátis.
+
+Após 10 ativos:
+💵 Você ganha R$10 por cliente.
+
+Deseja participar?
+
+1️⃣ Sim, quero meu código
+2️⃣ Voltar
+
+Digite a opção 👇
+Digite *menu* para voltar.`);
+}
 
          else if (message === "5") {
   await atualizarUsuario(from, { etapa: "area_cliente" });
@@ -517,7 +532,32 @@ Copie o código da próxima mensagem ou escaneie o QR abaixo 👇`);
   }
 
   break; 
+case "indique_confirmar":
 
+  if (message === "1") {
+
+    const codigo = user.cupom;
+
+    await atualizarUsuario(from, { etapa: "menu" });
+
+    await enviarMensagem(from, `✅ Você agora participa do Indique e Ganhe!
+
+Seu código exclusivo é:
+
+${codigo}
+
+Compartilhe com seus amigos.
+Eles ganham desconto no primeiro mês ✅
+
+Digite *menu* para voltar.`);
+  }
+
+  else if (message === "2") {
+    await atualizarUsuario(from, { etapa: "menu" });
+    await enviarMensagem(from, mensagemMenu);
+  }
+
+  break;
 case "suporte":
   // Bot fica totalmente silencioso
   break;
