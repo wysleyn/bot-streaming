@@ -339,37 +339,101 @@ Digite *menu* para voltar.`);
 
           break;
 
-        case "escolhendo_telas":
+case "escolhendo_telas":
 
-          const telas = parseInt(message);
+  const telas = parseInt(message);
 
-          if (telas >= 1 && telas <= 4) {
+  if (telas >= 1 && telas <= 4) {
 
-            const adicionais = (telas - 1) * 5;
-            const valorFinal = user.valor_temp + adicionais;
+    const adicionais = (telas - 1) * 5;
+    const valorFinal = user.valor_temp + adicionais;
 
-            await atualizarUsuario(from, {
-              etapa: "confirmando_pagamento",
-              telas_temp: telas,
-              valor_final_temp: valorFinal
-            });
+    await atualizarUsuario(from, {
+      etapa: "validando_cupom",
+      telas_temp: telas,
+      valor_final_temp: valorFinal
+    });
 
-            await enviarMensagem(from, `✅ Resumo:
+    await enviarMensagem(from, `Você possui cupom de indicação?
 
-📅 Plano: ${user.plano_temp}
-📺 Aparelhos: ${telas}
+Digite o código ou digite 0 para continuar sem cupom.
 
-💰 Valor total: R$ ${valorFinal.toFixed(2)}
+Digite *menu* para voltar.`);
+  }
+
+  break;
+case "validando_cupom":
+
+  const { data: usuarioAtual } = await supabase
+    .from("users")
+    .select("*")
+    .eq("phone", from)
+    .single();
+
+  if (message === "0") {
+
+    await atualizarUsuario(from, {
+      etapa: "confirmando_pagamento"
+    });
+
+    await enviarMensagem(from, `✅ Resumo:
+
+📅 Plano: ${usuarioAtual.plano_temp}
+📺 Aparelhos: ${usuarioAtual.telas_temp}
+
+💰 Valor total: R$ ${usuarioAtual.valor_final_temp.toFixed(2)}
 
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
 
 Digite *menu* para voltar.`);
-          }
 
-          break;
+    break;
+  }
+
+  const { data: indicador } = await supabase
+    .from("users")
+    .select("*")
+    .eq("cupom", message.toUpperCase())
+    .maybeSingle();
+
+  if (!indicador) {
+
+    await enviarMensagem(from, "❌ Cupom inválido. Digite novamente ou 0.");
+    break;
+  }
+
+  let novoValor = usuarioAtual.valor_final_temp;
+
+  if (usuarioAtual.plano_temp === "1 mês") {
+    novoValor = usuarioAtual.valor_final_temp - 5;
+  }
+
+  await atualizarUsuario(from, {
+    indicador_id: indicador.id,
+    valor_final_temp: novoValor,
+    etapa: "confirmando_pagamento"
+  });
+
+  await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
+
+📅 Plano: ${usuarioAtual.plano_temp}
+📺 Aparelhos: ${usuarioAtual.telas_temp}
+
+💰 Novo valor: R$ ${novoValor.toFixed(2)}
+
+1️⃣ Confirmar
+2️⃣ Escolher outro plano
+
+Digite *menu* para voltar.`);
+
+  break;       
 case "confirmando_pagamento":
-
+const { data: usuarioAtual } = await supabase
+  .from("users")
+  .select("*")
+  .eq("phone", from)
+  .single();
   if (message === "1") {
 
     await enviarMensagem(from, "🔄 Gerando seu pagamento PIX...");
@@ -377,8 +441,8 @@ case "confirmando_pagamento":
     const payment = await axios.post(
       "https://api.mercadopago.com/v1/payments",
       {
-        transaction_amount: user.valor_final_temp,
-        description: `Plano ${user.plano_temp} - ${user.telas_temp} telas`,
+    transaction_amount: usuarioAtual.valor_final_temp,
+description: `Plano ${usuarioAtual.plano_temp} - ${usuarioAtual.telas_temp} telas`,
         payment_method_id: "pix",
         payer: {
           email: "cliente@atlas.com",
@@ -403,7 +467,7 @@ case "confirmando_pagamento":
 
     await enviarMensagem(from, `✅ PIX gerado com sucesso!
 
-💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
+💰 Valor: R$ ${usuarioAtual.valor_final_temp.toFixed(2)}
 
 Você pode pagar de duas formas:
 
@@ -472,7 +536,11 @@ Digite *menu* para voltar.`);
 
 
 case "renovando_plano":
-
+const { data: usuarioAtual } = await supabase
+  .from("users")
+  .select("*")
+  .eq("phone", from)
+  .single();
   if (message === "1") {
 
     await enviarMensagem(from, "🔄 Gerando PIX para renovação...");
@@ -480,8 +548,8 @@ case "renovando_plano":
     const payment = await axios.post(
       "https://api.mercadopago.com/v1/payments",
       {
-        transaction_amount: user.valor_final_temp,
-        description: `Renovação ${user.plano_temp} - ${user.telas_temp} telas`,
+transaction_amount: usuarioAtual.valor_final_temp,
+description: `Renovação ${usuarioAtual.plano_temp} - ${usuarioAtual.telas_temp} telas`,
         payment_method_id: "pix",
         payer: {
           email: "cliente@atlas.com",
@@ -507,7 +575,7 @@ case "renovando_plano":
 
     await enviarMensagem(from, `✅ PIX de renovação gerado!
 
-💰 Valor: R$ ${user.valor_final_temp.toFixed(2)}
+💰 Valor: R$ ${usuarioAtual.valor_final_temp.toFixed(2)}
 
 Copie o código da próxima mensagem ou escaneie o QR abaixo 👇`);
 
