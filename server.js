@@ -365,26 +365,26 @@ Digite *menu* para voltar.`);
 
     case "escolhendo_telas":
       const opcoesTelas = {
-        "1": { nome: "1 aparelho", extra: 0 },
-        "2": { nome: "2 aparelhos", extra: 5 },
-        "3": { nome: "3 aparelhos", extra: 10 },
-        "4": { nome: "4 aparelhos", extra: 15 }
+        "1": { qtd: 1, extra: 0 },
+        "2": { qtd: 2, extra: 5 },
+        "3": { qtd: 3, extra: 10 },
+        "4": { qtd: 4, extra: 15 }
       };
 
       if (opcoesTelas[message]) {
         const extra = opcoesTelas[message].extra;
-        const valorBase = usuarioAtual.valor_temp || 0;
+        const valorBase = parseFloat(usuarioAtual.valor_temp) || 0;
         const valorFinal = valorBase + extra;
 
         await atualizarUsuario(from, {
           etapa: "validando_cupom",
-          telas_temp: opcoesTelas[message].nome,
+          telas_temp: opcoesTelas[message].qtd, 
           valor_final_temp: valorFinal
         });
 
         await enviarMensagem(from, `✅ Ótima escolha!
 
-Você tem algum cupom de desconto?
+Você tem algum cupom de desconto? 
 Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       } else {
         await enviarMensagem(from, "⚠️ Opção inválida. Escolha de 1 a 4 ou digite menu.");
@@ -402,21 +402,18 @@ case "validando_cupom":
 
   if (message === "0") {
 
-    await atualizarUsuario(from, {
-      etapa: "confirmando_pagamento"
-    });
+   // Substitua o bloco que envia o "✅ Resumo:" por este:
 
-    await enviarMensagem(from, `✅ Resumo:
-
+await enviarMensagem(from, `✅ Resumo:
 📅 Plano: ${usuarioCupom.plano_temp}
-📺 Aparelhos: ${usuarioCupom.telas_temp}
+📺 Aparelhos: ${usuarioCupom.telas_temp} ${usuarioCupom.telas_temp > 1 ? 'aparelhos' : 'aparelho'}
 
 💰 Valor total: R$ ${usuarioCupom.valor_final_temp.toFixed(2)}
 
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
 
-Digite *menu* para voltar.`);
+Digite menu para voltar.`);
 
     break;
   }
