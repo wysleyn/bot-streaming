@@ -348,29 +348,6 @@ Digite *menu* para voltar.`);
 
           break;
 
-case "escolhendo_telas":
-
-  const telas = parseInt(message);
-
-  if (telas >= 1 && telas <= 4) {
-
-    const adicionais = (telas - 1) * 5;
-    const valorFinal = user.valor_temp + adicionais;
-
-    await atualizarUsuario(from, {
-      etapa: "validando_cupom",
-      telas_temp: telas,
-      valor_final_temp: valorFinal
-    });
-
-    await enviarMensagem(from, `Você possui cupom de indicação?
-
-Digite o código ou digite 0 para continuar sem cupom.
-
-Digite *menu* para voltar.`);
-  }
-
-  break;
 case "validando_cupom":
 
   const { data: usuarioCupom } = await supabase
@@ -407,14 +384,13 @@ Digite *menu* para voltar.`);
     .maybeSingle();
 
   if (!indicador) {
-
     await enviarMensagem(from, "❌ Cupom inválido. Digite novamente ou 0.");
     break;
   }
 
   let novoValor = usuarioCupom.valor_final_temp;
 
-  if (usuarioAtual.plano_temp === "1 mês") {
+  if (usuarioCupom.plano_temp === "1 mês") {
     novoValor = usuarioCupom.valor_final_temp - 5;
   }
 
@@ -426,8 +402,8 @@ Digite *menu* para voltar.`);
 
   await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
 
-📅 Plano: ${usuarioAtual.plano_temp}
-📺 Aparelhos: ${usuarioAtual.telas_temp}
+📅 Plano: ${usuarioCupom.plano_temp}
+📺 Aparelhos: ${usuarioCupom.telas_temp}
 
 💰 Novo valor: R$ ${novoValor.toFixed(2)}
 
@@ -436,6 +412,7 @@ Digite *menu* para voltar.`);
 
 Digite *menu* para voltar.`);
 
+  break;
   break;       
 case "confirmando_pagamento":
 const { data: usuarioPagamento } = await supabase
