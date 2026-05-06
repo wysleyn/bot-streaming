@@ -128,7 +128,16 @@ app.post("/webhook", async (req, res) => {
       const from = body.data.from.replace("@c.us", "");
       const message = body.data.body?.trim().toLowerCase();
 
-      const user = await criarOuBuscarUsuario(from);
+      // ✅ Garante que o usuário exista
+      await criarOuBuscarUsuario(from);
+
+      // ✅ Sempre pega o usuário atualizado
+      const { data: user } = await supabase
+        .from("users")
+        .select("*")
+        .eq("phone", from)
+        .single();
+
       if (!user) return res.sendStatus(200);
       if (!BOT_ATIVO) return res.sendStatus(200);
 
