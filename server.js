@@ -392,8 +392,9 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       break;
 
 // ... aqui continua o case "validando_cupom"
-            case "validando_cupom":
-      const { data: usuarioCupom } = await supabase
+             case "validando_cupom":
+      // Pegar dados do usuário que está comprando
+      const { data: usuarioComprando, error: erroUser } = await supabase
         .from("users")
         .select("*")
         .eq("phone", from)
@@ -402,10 +403,10 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       if (message === "0") {
         await atualizarUsuario(from, { etapa: "confirmando_pagamento" });
         await enviarMensagem(from, `✅ Resumo:
-📅 Plano: ${usuarioCupom.plano_temp}
-📺 Aparelhos: ${usuarioCupom.telas_temp} ${usuarioCupom.telas_temp > 1 ? 'aparelhos' : 'aparelho'}
+📅 Plano: ${usuarioComprando.plano_temp}
+📺 Aparelhos: ${usuarioComprando.telas_temp}
 
-💰 Valor total: R$ ${usuarioCupom.valor_final_temp.toFixed(2)}
+💰 Valor total: R$ ${usuarioComprando.valor_final_temp.toFixed(2)}
 
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
@@ -414,49 +415,54 @@ Digite menu para voltar.`);
         break;
       }
 
-      // ✅ Limpa o cupom: tira espaços e deixa em MAIÚSCULO
-      const cupomDigitado = message.replace(/\s+/g, '').toUpperCase();
+      const cupomDigitado = message.trim().toUpperCase();
+      console.log(`[DEBUG] Tentando cupom: ${cupomDigitado} para o usuário: ${from}`);
 
-      // ✅ Busca no banco de forma exata
-      const { data: indicador, error: erroBusca } = await supabase
+      // BUSCA O DONO DO CUPOM
+      const { data: donoDoCupom, error: erroBusca } = await supabase
         .from("users")
         .select("*")
         .eq("cupom", cupomDigitado)
         .maybeSingle();
 
-      if (!indicador) {
-        await enviarMensagem(from, `❌ Cupom *${cupomDigitado}* não encontrado.
+      if (erroBusca) {
+        console.error("[ERRO SUPABASE]:", erroBusca.message);
+        await enviarMensagem(from, "⚠️ Erro técnico ao validar cupom. Tente novamente mais tarde ou digite 0.");
+        break;
+      }
+
+      if (!donoDoCupom) {
+        console.log(`[LOG] O cupom ${cupomDigitado} não existe no banco.`);
+        await enviarMensagem(from, `❌ Cupom *${cupomDigitado}* inválido.
         
 Verifique se digitou corretamente ou envie *0* para continuar sem desconto.`);
         break;
       }
 
-      // Evita usar o próprio cupom
-      if (indicador.phone === from) {
+      if (donoDoCupom.phone === from) {
         await enviarMensagem(from, "⚠️ Você não pode usar seu próprio cupom.");
         break;
       }
 
-      let valorComDesconto = usuarioCupom.valor_final_temp;
-      // Aplica desconto de R$ 5,00 se for plano de 1 mês
-      if (usuarioCupom.plano_temp === "1 mês") {
-        valorComDesconto = usuarioCupom.valor_final_temp - 5;
+      // Se chegou aqui, o cupom é válido!
+      let valorComDesconto = usuarioComprando.valor_final_temp;
+      if (usuarioComprando.plano_temp === "1 mês") {
+        valorComDesconto = usuarioComprando.valor_final_temp - 5;
       }
 
       await atualizarUsuario(from, {
-        indicador_id: indicador.id,
+        indicador_id: donoDoCupom.id,
         valor_final_temp: valorComDesconto,
         etapa: "confirmando_pagamento"
       });
 
-      await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
+      console.log(`[SUCESSO] Cupom ${cupomDigitado} aplicado. Novo valor: ${valorComDesconto}`);
 
+      await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
 💰 Novo valor: R$ ${valorComDesconto.toFixed(2)}
 
 1️⃣ Confirmar
-2️⃣ Escolher outro plano
-
-Digite *menu* para voltar.`);
+2️⃣ Escolher outro plano`);
       break;
   break;       
 case "confirmando_pagamento":
