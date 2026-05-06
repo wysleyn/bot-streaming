@@ -392,7 +392,7 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       break;
 
 // ... aqui continua o case "validando_cupom"
-             case "validando_cupom":
+    case "validando_cupom":
       // Pegar dados do usuário que está comprando
       const { data: usuarioComprando, error: erroUser } = await supabase
         .from("users")
@@ -427,12 +427,11 @@ Digite menu para voltar.`);
 
       if (erroBusca) {
         console.error("[ERRO SUPABASE]:", erroBusca.message);
-        await enviarMensagem(from, "⚠️ Erro técnico ao validar cupom. Tente novamente mais tarde ou digite 0.");
+        await enviarMensagem(from, "⚠️ Erro técnico ao validar cupom. Tente novamente ou digite 0.");
         break;
       }
 
       if (!donoDoCupom) {
-        console.log(`[LOG] O cupom ${cupomDigitado} não existe no banco.`);
         await enviarMensagem(from, `❌ Cupom *${cupomDigitado}* inválido.
         
 Verifique se digitou corretamente ou envie *0* para continuar sem desconto.`);
@@ -444,27 +443,33 @@ Verifique se digitou corretamente ou envie *0* para continuar sem desconto.`);
         break;
       }
 
-      // Se chegou aqui, o cupom é válido!
-      let valorComDesconto = usuarioComprando.valor_final_temp;
+      // Cálculo do desconto (usando o nome correto da variável)
+      let novoValor = usuarioComprando.valor_final_temp;
       if (usuarioComprando.plano_temp === "1 mês") {
-        valorComDesconto = usuarioComprando.valor_final_temp - 5;
+        novoValor = usuarioComprando.valor_final_temp - 5;
       }
 
       await atualizarUsuario(from, {
         indicador_id: donoDoCupom.id,
-        valor_final_temp: valorComDesconto,
+        valor_final_temp: novoValor,
         etapa: "confirmando_pagamento"
       });
 
-      console.log(`[SUCESSO] Cupom ${cupomDigitado} aplicado. Novo valor: ${valorComDesconto}`);
+      console.log(`[SUCESSO] Cupom ${cupomDigitado} aplicado. Novo valor: ${novoValor}`);
 
+      // MENSAGEM FINAL FORMATADA
       await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
-💰 Novo valor: R$ ${valorComDesconto.toFixed(2)}
+
+📅 Plano: ${usuarioComprando.plano_temp}
+📺 Aparelhos: ${usuarioComprando.telas_temp}
+
+💰 Novo valor: R$ ${novoValor.toFixed(2)}
 
 1️⃣ Confirmar
-2️⃣ Escolher outro plano`);
-      break;
-  break;       
+2️⃣ Escolher outro plano
+
+Digite *menu* para voltar.`);
+      break;   
 case "confirmando_pagamento":
 const { data: usuarioPagamento } = await supabase
   .from("users")
