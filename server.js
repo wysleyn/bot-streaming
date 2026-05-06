@@ -392,19 +392,20 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       break;
 
 // ... aqui continua o case "validando_cupom"
-case "validando_cupom":
+    case "validando_cupom":
+      const { data: usuarioCupom } = await supabase
+        .from("users")
+        .select("*")
+        .eq("phone", from)
+        .single();
 
-  const { data: usuarioCupom } = await supabase
-    .from("users")
-    .select("*")
-    .eq("phone", from)
-    .single();
+      if (message === "0") {
+        // ✅ ATUALIZA A ETAPA PARA O PRÓXIMO PASSO
+        await atualizarUsuario(from, {
+          etapa: "confirmando_pagamento"
+        });
 
-  if (message === "0") {
-
-   // Substitua o bloco que envia o "✅ Resumo:" por este:
-
-await enviarMensagem(from, `✅ Resumo:
+        await enviarMensagem(from, `✅ Resumo:
 📅 Plano: ${usuarioCupom.plano_temp}
 📺 Aparelhos: ${usuarioCupom.telas_temp} ${usuarioCupom.telas_temp > 1 ? 'aparelhos' : 'aparelho'}
 
@@ -414,34 +415,32 @@ await enviarMensagem(from, `✅ Resumo:
 2️⃣ Escolher outro plano
 
 Digite menu para voltar.`);
+        break;
+      }
 
-    break;
-  }
+      const { data: indicador } = await supabase
+        .from("users")
+        .select("*")
+        .eq("cupom", message.toUpperCase())
+        .maybeSingle();
 
-  const { data: indicador } = await supabase
-    .from("users")
-    .select("*")
-    .eq("cupom", message.toUpperCase())
-    .maybeSingle();
+      if (!indicador) {
+        await enviarMensagem(from, "❌ Cupom inválido. Digite novamente ou 0 para pular.");
+        break;
+      }
 
-  if (!indicador) {
-    await enviarMensagem(from, "❌ Cupom inválido. Digite novamente ou 0.");
-    break;
-  }
+      let novoValor = usuarioCupom.valor_final_temp;
+      if (usuarioCupom.plano_temp === "1 mês") {
+        novoValor = usuarioCupom.valor_final_temp - 5;
+      }
 
-  let novoValor = usuarioCupom.valor_final_temp;
+      await atualizarUsuario(from, {
+        indicador_id: indicador.id,
+        valor_final_temp: novoValor,
+        etapa: "confirmando_pagamento"
+      });
 
-  if (usuarioCupom.plano_temp === "1 mês") {
-    novoValor = usuarioCupom.valor_final_temp - 5;
-  }
-
-  await atualizarUsuario(from, {
-    indicador_id: indicador.id,
-    valor_final_temp: novoValor,
-    etapa: "confirmando_pagamento"
-  });
-
-  await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
+      await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
 
 📅 Plano: ${usuarioCupom.plano_temp}
 📺 Aparelhos: ${usuarioCupom.telas_temp}
@@ -451,9 +450,8 @@ Digite menu para voltar.`);
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
 
-Digite *menu* para voltar.`);
-
-  break;
+Digite menu para voltar.`);
+      break;
   break;       
 case "confirmando_pagamento":
 const { data: usuarioPagamento } = await supabase
