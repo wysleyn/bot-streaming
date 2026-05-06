@@ -392,7 +392,7 @@ Digite o código do cupom ou digite *0* para continuar sem cupom.`);
       break;
 
 // ... aqui continua o case "validando_cupom"
-        case "validando_cupom":
+            case "validando_cupom":
       const { data: usuarioCupom } = await supabase
         .from("users")
         .select("*")
@@ -414,28 +414,22 @@ Digite menu para voltar.`);
         break;
       }
 
-      // Prepara o cupom: remove espaços e coloca em MAIÚSCULO (padrão ATLASxxxx)
-      const cupomLimpo = message.trim().toUpperCase();
-      console.log(`[LOG] Usuário ${from} tentou o cupom: [${cupomLimpo}]`);
+      // ✅ Limpa o cupom: tira espaços e deixa em MAIÚSCULO
+      const cupomDigitado = message.replace(/\s+/g, '').toUpperCase();
 
-      // Busca exata pelo cupom
+      // ✅ Busca no banco de forma exata
       const { data: indicador, error: erroBusca } = await supabase
         .from("users")
         .select("*")
-        .eq("cupom", cupomLimpo) // busca exata
+        .eq("cupom", cupomDigitado)
         .maybeSingle();
 
-      if (erroBusca) {
-        console.error("[ERRO SUPABASE]:", erroBusca.message);
-      }
-
       if (!indicador) {
-        console.log(`[LOG] Cupom ${cupomLimpo} não foi encontrado no banco.`);
-        await enviarMensagem(from, "❌ Cupom inválido. Verifique se digitou corretamente ou envie *0* para continuar sem desconto.");
+        await enviarMensagem(from, `❌ Cupom *${cupomDigitado}* não encontrado.
+        
+Verifique se digitou corretamente ou envie *0* para continuar sem desconto.`);
         break;
       }
-
-      console.log(`[LOG] Cupom encontrado! Pertence ao número: ${indicador.phone}`);
 
       // Evita usar o próprio cupom
       if (indicador.phone === from) {
@@ -443,8 +437,8 @@ Digite menu para voltar.`);
         break;
       }
 
-      // Cálculo do desconto
       let valorComDesconto = usuarioCupom.valor_final_temp;
+      // Aplica desconto de R$ 5,00 se for plano de 1 mês
       if (usuarioCupom.plano_temp === "1 mês") {
         valorComDesconto = usuarioCupom.valor_final_temp - 5;
       }
@@ -455,10 +449,7 @@ Digite menu para voltar.`);
         etapa: "confirmando_pagamento"
       });
 
-      await enviarMensagem(from, `✅ Cupom *${indicador.cupom}* aplicado!
-
-📅 Plano: ${usuarioCupom.plano_temp}
-📺 Aparelhos: ${usuarioCupom.telas_temp}
+      await enviarMensagem(from, `✅ Cupom aplicado com sucesso!
 
 💰 Novo valor: R$ ${valorComDesconto.toFixed(2)}
 
