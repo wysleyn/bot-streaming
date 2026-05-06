@@ -364,7 +364,7 @@ Digite *menu* para voltar.`);
   break;
 case "validando_cupom":
 
-  const { data: usuarioAtual } = await supabase
+  const { data: usuarioCupom } = await supabase
     .from("users")
     .select("*")
     .eq("phone", from)
@@ -378,10 +378,10 @@ case "validando_cupom":
 
     await enviarMensagem(from, `✅ Resumo:
 
-📅 Plano: ${usuarioAtual.plano_temp}
-📺 Aparelhos: ${usuarioAtual.telas_temp}
+📅 Plano: ${usuarioCupom.plano_temp}
+📺 Aparelhos: ${usuarioCupom.telas_temp}
 
-💰 Valor total: R$ ${usuarioAtual.valor_final_temp.toFixed(2)}
+💰 Valor total: R$ ${usuarioCupom.valor_final_temp.toFixed(2)}
 
 1️⃣ Confirmar
 2️⃣ Escolher outro plano
@@ -403,10 +403,10 @@ Digite *menu* para voltar.`);
     break;
   }
 
-  let novoValor = usuarioAtual.valor_final_temp;
+  let novoValor = usuarioCupom.valor_final_temp;
 
   if (usuarioAtual.plano_temp === "1 mês") {
-    novoValor = usuarioAtual.valor_final_temp - 5;
+    novoValor = usuarioCupom.valor_final_temp - 5;
   }
 
   await atualizarUsuario(from, {
@@ -429,7 +429,7 @@ Digite *menu* para voltar.`);
 
   break;       
 case "confirmando_pagamento":
-const { data: usuarioAtual } = await supabase
+const { data: usuarioPagamento } = await supabase
   .from("users")
   .select("*")
   .eq("phone", from)
@@ -441,8 +441,8 @@ const { data: usuarioAtual } = await supabase
     const payment = await axios.post(
       "https://api.mercadopago.com/v1/payments",
       {
-    transaction_amount: usuarioAtual.valor_final_temp,
-description: `Plano ${usuarioAtual.plano_temp} - ${usuarioAtual.telas_temp} telas`,
+    transaction_amount: usuarioPagamento.valor_final_temp,
+description: `Plano ${usuarioPagamento.plano_temp} - ${usuarioPagamento.telas_temp} telas`,
         payment_method_id: "pix",
         payer: {
           email: "cliente@atlas.com",
@@ -467,7 +467,7 @@ description: `Plano ${usuarioAtual.plano_temp} - ${usuarioAtual.telas_temp} tela
 
     await enviarMensagem(from, `✅ PIX gerado com sucesso!
 
-💰 Valor: R$ ${usuarioAtual.valor_final_temp.toFixed(2)}
+💰 Valor: R$ ${usuarioPagamento.valor_final_temp.toFixed(2)}
 
 Você pode pagar de duas formas:
 
@@ -536,7 +536,7 @@ Digite *menu* para voltar.`);
 
 
 case "renovando_plano":
-const { data: usuarioAtual } = await supabase
+const { data: usuarioRenovacao } = await supabase
   .from("users")
   .select("*")
   .eq("phone", from)
@@ -548,8 +548,8 @@ const { data: usuarioAtual } = await supabase
     const payment = await axios.post(
       "https://api.mercadopago.com/v1/payments",
       {
-transaction_amount: usuarioAtual.valor_final_temp,
-description: `Renovação ${usuarioAtual.plano_temp} - ${usuarioAtual.telas_temp} telas`,
+transaction_amount: usuarioRenovacao.valor_final_temp,
+description: `Renovação ${usuarioRenovacao.plano_temp} - ${usuarioRenovacao.telas_temp} telas`,
         payment_method_id: "pix",
         payer: {
           email: "cliente@atlas.com",
@@ -575,7 +575,7 @@ description: `Renovação ${usuarioAtual.plano_temp} - ${usuarioAtual.telas_temp
 
     await enviarMensagem(from, `✅ PIX de renovação gerado!
 
-💰 Valor: R$ ${usuarioAtual.valor_final_temp.toFixed(2)}
+💰 Valor: R$ ${usuarioRenovacao.valor_final_temp.toFixed(2)}
 
 Copie o código da próxima mensagem ou escaneie o QR abaixo 👇`);
 
